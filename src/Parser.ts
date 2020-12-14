@@ -7,14 +7,14 @@ import { choice } from "./choice";
 import { all } from "./all";
 import { Separated } from "./Separated";
 import { Repeat } from "./Repeat";
+import { Describe } from "./Describe";
 
 export class Parser<A> {
 
   constructor(public action: (context: Context) => ActionResult<A>) { }
 
   parse(input: string): ParseOK<A> | ParseFail {
-    const location = { index: 0, line: 1, column: 1 };
-    const context = new Context(input, location);
+    const context = new Context(input);
     const result = this.skip(eof).action(context);
     if (result.type === ActionResultType.OK) {
       return {
@@ -80,18 +80,7 @@ export class Parser<A> {
   }
 
   desc(expected: string[]): Parser<A> {
-    return new Parser((context) => {
-      const result = this.action(context);
-      if (result.type === ActionResultType.OK) {
-        return result;
-      }
-      return new ActionResult({
-        type: ActionResultType.Fail,
-        furthest: result.furthest,
-        location: context.location,
-        expected: expected
-      });
-    });
+    return Describe(this, expected)
   }
 
   wrap<B = string, C = string>(before: Parser<B> | string, after: Parser<C> | string): Parser<A> {
@@ -121,3 +110,6 @@ export class Parser<A> {
     });
   }
 }
+
+
+

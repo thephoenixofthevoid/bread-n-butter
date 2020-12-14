@@ -5,7 +5,7 @@ export class Context {
 
     constructor(
         public input: string,
-        public location: SourceLocation
+        public location: SourceLocation = { index: 0, line: 1, column: 1 }
     ) { 
     }
 
