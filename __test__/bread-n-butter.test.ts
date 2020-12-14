@@ -306,7 +306,7 @@ test("text", () => {
   }
 });
 
-test.skip("emoji length", () => {
+test("emoji length", () => {
   const smiles = "🙂🙂🙂";
   const result = bnb.text(smiles).node("Emoji");
   snapTest(result, smiles);
