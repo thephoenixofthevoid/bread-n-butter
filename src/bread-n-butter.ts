@@ -1,5 +1,5 @@
 import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } from "./interfaces";
-import { ParseResultType, ActionResultType } from "./interfaces";
+import { ResultTypeEnum, ActionResultType } from "./interfaces";
 
 /**
  * The parsing action. Takes a parsing Context and returns an ActionResult
@@ -14,7 +14,7 @@ export class Parser<A> {
   /**
    * Creates a new custom parser that performs the given parsing action.
    */
-  constructor(public action: ParsingAction<A>) {}
+  constructor(public action: ParsingAction<A>) { }
 
   /**
    * Returns a parse result with either the value or error information.
@@ -25,12 +25,12 @@ export class Parser<A> {
     const result = this.skip(eof).action(context);
     if (result.type === "ActionOK") {
       return {
-        type: ParseResultType.OK,
+        type: ResultTypeEnum.OK,
         value: result.value,
       };
     }
     return {
-      type: ParseResultType.Fail,
+      type: ResultTypeEnum.Fail,
       location: result.furthest,
       expected: result.expected,
     };
@@ -41,7 +41,7 @@ export class Parser<A> {
    */
   tryParse(input: string): A {
     const result = this.parse(input);
-    if (result.type === ParseResultType.OK) {
+    if (result.type === ResultTypeEnum.OK) {
       return result.value;
     }
     const { expected, location } = result;
@@ -63,10 +63,10 @@ export class Parser<A> {
         return a;
       }
       context = context.moveTo(a.location);
-      const b = context.merge(a, parserB.action(context));
+      const b = merge(a, parserB.action(context));
       if (b.type === "ActionOK") {
         const value: [A, B] = [a.value, b.value];
-        return context.merge(b, context.ok(b.location.index, value));
+        return merge(b, context.ok(b.location.index, value));
       }
       return b;
     });
@@ -92,7 +92,7 @@ export class Parser<A> {
       if (a.type === "ActionOK") {
         return a;
       }
-      return context.merge(a, parserB.action(context));
+      return merge(a, parserB.action(context));
     });
   }
 
@@ -108,7 +108,7 @@ export class Parser<A> {
       }
       const parserB = fn(a.value);
       context = context.moveTo(a.location);
-      return context.merge(a, parserB.action(context));
+      return merge(a, parserB.action(context));
     });
   }
 
@@ -140,8 +140,8 @@ export class Parser<A> {
       }
       return {
         type: ActionResultType.Fail,
-        furthest: result.furthest, 
-        expected 
+        furthest: result.furthest,
+        expected
       };
     });
   }
@@ -186,12 +186,12 @@ export class Parser<A> {
           );
         }
         context = context.moveTo(result.location);
-        result = context.merge(result, this.action(context));
+        result = merge(result, this.action(context));
       }
       if (result.type === "ActionFail" && items.length < min) {
         return result;
       }
-      return context.merge(result, context.ok(context.location.index, items));
+      return merge(result, context.ok(context.location.index, items));
     });
   }
 
@@ -226,7 +226,7 @@ export class Parser<A> {
    */
   node<S extends string>(name: S): Parser<ParseNode<S, A>> {
     return all(location, this, location).map(([start, value, end]) => {
-      const type = ParseResultType.Node;
+      const type = ResultTypeEnum.Node;
       return { type, name, value, start, end } as const;
     });
   }
@@ -275,8 +275,10 @@ export function fail<A>(expected: string[]): Parser<A> {
 export const eof = new Parser<"<EOF>">((context) => {
   if (context.location.index < context.input.length) {
     return context.fail(context.location.index, ["<EOF>"]);
+  } else {
+    return context.ok(context.location.index, "<EOF>");
   }
-  return context.ok(context.location.index, "<EOF>");
+
 });
 
 /** Returns a parser that matches the exact text supplied. */
@@ -284,10 +286,13 @@ export function text<A extends string>(string: A): Parser<A> {
   return new Parser<A>((context) => {
     const start = context.location.index;
     const end = start + string.length;
+
     if (context.input.slice(start, end) === string) {
       return context.ok(end, string);
+    } else {
+      return context.fail(start, [string]);
     }
-    return context.fail(start, [string]);
+
   });
 }
 
@@ -382,9 +387,9 @@ function union(a: string[], b: string[]): string[] {
 class Context {
 
   constructor(
-    public input: string, 
+    public input: string,
     public location: SourceLocation
-  ) {}
+  ) { }
 
   /**
    * Returns a new context with the supplied location and the current input.
@@ -438,31 +443,33 @@ class Context {
     };
   }
 
-  /**
-   * Merge two sequential `ActionResult`s so that the `expected` and location data
-   * is preserved correctly.
-   */
-  merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
-    if (b.furthest.index > a.furthest.index) {
-      return b;
-    }
-    const expected =
-      b.furthest.index === a.furthest.index
-        ? union(a.expected, b.expected)
-        : a.expected;
-    if (b.type === "ActionOK") {
-      return {
-        type: ActionResultType.OK,
-        location: b.location,
-        value: b.value,
-        furthest: a.furthest,
-        expected,
-      };
-    }
+
+}
+
+/**
+* Merge two sequential `ActionResult`s so that the `expected` and location data
+* is preserved correctly.
+*/
+function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
+  if (b.furthest.index > a.furthest.index) {
+    return b;
+  }
+  const expected =
+    b.furthest.index === a.furthest.index
+      ? union(a.expected, b.expected)
+      : a.expected;
+  if (b.type === "ActionOK") {
     return {
-      type: ActionResultType.Fail,
+      type: ActionResultType.OK,
+      location: b.location,
+      value: b.value,
       furthest: a.furthest,
       expected,
     };
   }
+  return {
+    type: ActionResultType.Fail,
+    furthest: a.furthest,
+    expected,
+  };
 }
