@@ -569,6 +569,54 @@ Object {
 }
 `;
 
+exports[`notFollowing: "<>" 1`] = `
+Object {
+  "expected": Array [
+    "not '>'",
+  ],
+  "location": Object {
+    "column": 2,
+    "index": 1,
+    "line": 1,
+  },
+  "type": "ParseFail",
+}
+`;
+
+exports[`notFollowing: "<hi>" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    Array [
+      "<",
+      null,
+      "hi",
+      ">",
+    ],
+  ],
+}
+`;
+
+exports[`notFollowing: "<hihello><--->" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    Array [
+      "<",
+      null,
+      "hihello",
+      ">",
+    ],
+    Array [
+      "<",
+      null,
+      "---",
+      ">",
+    ],
+  ],
+}
+`;
+
 exports[`or: "" 1`] = `
 Object {
   "expected": Array [
@@ -1185,6 +1233,54 @@ exports[`test a test: "x" 1`] = `
 Object {
   "type": "ParseOK",
   "value": "x",
+}
+`;
+
+exports[`toParser: "<>" 1`] = `
+Object {
+  "expected": Array [
+    "not '>'",
+  ],
+  "location": Object {
+    "column": 2,
+    "index": 1,
+    "line": 1,
+  },
+  "type": "ParseFail",
+}
+`;
+
+exports[`toParser: "<hi>" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    Array [
+      "<",
+      null,
+      "hi",
+      ">",
+    ],
+  ],
+}
+`;
+
+exports[`toParser: "<hihello><--->" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    Array [
+      "<",
+      null,
+      "hihello",
+      ">",
+    ],
+    Array [
+      "<",
+      null,
+      "---",
+      ">",
+    ],
+  ],
 }
 `;
 

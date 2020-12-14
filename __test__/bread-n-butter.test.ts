@@ -284,6 +284,33 @@ test("lookahead", () => {
   snapTest(p, "<>hi>>");
 });
 
+test("notFollowing", () => {
+  const p = bnb.all(
+    bnb.text("<"),
+    bnb.notFollowing(bnb.text(">")),
+    bnb.match(/[a-zA-Z_-]*/),
+    bnb.text(">")
+  ).repeat(0, Infinity)
+
+  snapTest(p, "<>");
+  snapTest(p, "<hi>");
+  snapTest(p, "<hihello><--->");
+});
+
+test("toParser", () => {
+  const p = bnb.all(
+    "<",
+    bnb.notFollowing(bnb.text(">")),
+    /[a-zA-Z_-]*/,
+    ">"
+  ).repeat(0, Infinity)
+
+  snapTest(p, "<>");
+  snapTest(p, "<hi>");
+  snapTest(p, "<hihello><--->");
+});
+
+
 test("trim", () => {
   const p = bnb.text("x").trim(bnb.text("~"));
   snapTest(p, "~x~");

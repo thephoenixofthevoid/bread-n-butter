@@ -115,17 +115,6 @@ export class Parser<A> {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
   /**
    * Returns the callback called with the parser.
    */
@@ -237,25 +226,6 @@ export class Parser<A> {
   }
 }
 
-// class MapParser<A, B> extends Parser<A> {
-
-//   constructor(fn: (value: B) => A, public parent: Parser<B>) {
-
-//     super(function (context) {
-//       const report = parent.action(context)
-//       if (report.type === ActionResultType.OK) {
-//         return {
-//           ...report, 
-//           value: fn(report.value)
-//         }
-//       } else {
-//         return report
-//       }
-//     })
-//   }
-
-// }
-
 function isRangeValid(min: number, max: number): boolean {
   return (
     min <= max &&
@@ -326,6 +296,17 @@ export function lookahead<B>(parser: Parser<B>) {
   })
 }
 
+export function notFollowing<B>(parser: Parser<B>) {
+  return new Parser(function (context) {
+    const a = parser.action(context)
+    if (a.type === ActionResultType.OK) {
+      const b = context.fail<null>([ `not '${a.value}'` ])
+      return merge(a, b)
+    }
+    return merge(a, context.ok(null))
+  })
+}
+
 /**
  * Returns a parser that matches the entire regular expression at the current
  * parser position.
@@ -360,7 +341,7 @@ export function match(regexp: RegExp): Parser<string> {
 /** A tuple of parsers */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ManyParsers<A extends any[]> = {
-  [P in keyof A]: Parser<A[P]>;
+  [P in keyof A]: Parser<A[P]>|A[P];
 };
 
 export function seqMap<A extends any[], B>(parsers: ManyParsers<A>, fn: (args: A) => B): Parser<A> {
@@ -384,11 +365,23 @@ export function seqMap<A extends any[], B>(parsers: ManyParsers<A>, fn: (args: A
   });
 }
 
+function toParser(parser:string|RegExp|Parser<any>) {
+  if (typeof parser === "string") {
+    return text(parser)
+  }
+  if (parser instanceof RegExp) {
+    return match(parser)
+  }
+  return parser
+}
 
 
 /** Parse all items, returning their values in the same order. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
+
+  parsers = parsers.map(toParser) as ManyParsers<A>;
+
   return new Parser((context) => {
     const reports: ActionOK<A>[] = []
     const values = new Array(parsers.length) as A;
@@ -411,7 +404,10 @@ export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
 
 /** Parse using the parsers given, returning the first one that succeeds. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function choice<Parsers extends Parser<any>[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
+export function choice<Parsers extends (Parser<any>|any)[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
+
+  parsers = parsers.map(toParser) as Parsers;
+
   return new Parser((context) => {
     var reports: ActionFail[] = []
   
