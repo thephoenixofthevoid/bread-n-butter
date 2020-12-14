@@ -1,19 +1,17 @@
 /**
+ * The parsing action. Takes a parsing Context and returns an ActionResult
+ * representing success or failure.
+ */
+type ParsingAction<A> = (context: Context) => ActionResult<A>
+
+/**
  * Represents a parsing action; typically not created directly via `new`.
  */
 export class Parser<A> {
   /**
-   * The parsing action. Takes a parsing Context and returns an ActionResult
-   * representing success or failure.
-   */
-  action: (context: Context) => ActionResult<A>;
-
-  /**
    * Creates a new custom parser that performs the given parsing action.
    */
-  constructor(action: (context: Context) => ActionResult<A>) {
-    this.action = action;
-  }
+  constructor(public action: ParsingAction<A>) {}
 
   /**
    * Returns a parse result with either the value or error information.
