@@ -23,7 +23,7 @@ export class Parser<A> {
     const location = { index: 0, line: 1, column: 1 };
     const context = new Context(input, location);
     const result = this.skip(eof).action(context);
-    if (result.type === "ActionOK") {
+    if (result.type === ActionResultType.OK) {
       return {
         type: ResultTypeEnum.OK,
         value: result.value,
@@ -59,12 +59,12 @@ export class Parser<A> {
   and<B>(parserB: Parser<B>): Parser<[A, B]> {
     return new Parser((context) => {
       const a = this.action(context);
-      if (a.type === "ActionFail") {
+      if (a.type === ActionResultType.Fail) {
         return a;
       }
       context = context.moveTo(a.location);
       const b = merge(a, parserB.action(context));
-      if (b.type === "ActionOK") {
+      if (b.type === ActionResultType.OK) {
         const value: [A, B] = [a.value, b.value];
         return merge(b, context.ok(b.location.index, value));
       }
@@ -89,7 +89,7 @@ export class Parser<A> {
   or<B>(parserB: Parser<B>): Parser<A | B> {
     return new Parser<A | B>((context) => {
       const a = this.action(context);
-      if (a.type === "ActionOK") {
+      if (a.type === ActionResultType.OK) {
         return a;
       }
       return merge(a, parserB.action(context));
@@ -103,7 +103,7 @@ export class Parser<A> {
   chain<B>(fn: (value: A) => Parser<B>): Parser<B> {
     return new Parser((context) => {
       const a = this.action(context);
-      if (a.type === "ActionFail") {
+      if (a.type === ActionResultType.Fail) {
         return a;
       }
       const parserB = fn(a.value);
@@ -135,7 +135,7 @@ export class Parser<A> {
   desc(expected: string[]): Parser<A> {
     return new Parser((context) => {
       const result = this.action(context);
-      if (result.type === "ActionOK") {
+      if (result.type === ActionResultType.OK) {
         return result;
       }
       return {
@@ -175,10 +175,10 @@ export class Parser<A> {
     return new Parser((context) => {
       const items: A[] = [];
       let result = this.action(context);
-      if (result.type === "ActionFail") {
+      if (result.type === ActionResultType.Fail) {
         return result;
       }
-      while (result.type === "ActionOK" && items.length < max) {
+      while (result.type === ActionResultType.OK && items.length < max) {
         items.push(result.value);
         if (result.location.index === context.location.index) {
           throw new Error(
@@ -188,7 +188,7 @@ export class Parser<A> {
         context = context.moveTo(result.location);
         result = merge(result, this.action(context));
       }
-      if (result.type === "ActionFail" && items.length < min) {
+      if (result.type === ActionResultType.Fail && items.length < min) {
         return result;
       }
       return merge(result, context.ok(context.location.index, items));
@@ -458,7 +458,7 @@ function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
     b.furthest.index === a.furthest.index
       ? union(a.expected, b.expected)
       : a.expected;
-  if (b.type === "ActionOK") {
+  if (b.type === ActionResultType.OK) {
     return {
       type: ActionResultType.OK,
       location: b.location,
@@ -466,10 +466,12 @@ function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
       furthest: a.furthest,
       expected,
     };
+  } else {
+    return {
+      type: ActionResultType.Fail,
+      furthest: a.furthest,
+      expected,
+    };
   }
-  return {
-    type: ActionResultType.Fail,
-    furthest: a.furthest,
-    expected,
-  };
+
 }
