@@ -399,22 +399,18 @@ class Context {
     return new Context(this.input, location);
   }
 
-  private _internal_move(index: number): SourceLocation {
-    if (index === this.location.index) {
-      return this.location;
-    }
-    const start = this.location.index;
-    const end = index;
-    let { line, column } = this.location;
+  private _internal_move(newIndex: number): SourceLocation {
+    var { index, line, column } = this.location;
 
-    for (let i = start; i < end; i++) {
-      const ch = this.input[i]
+    while (index < newIndex) {
+      const ch = this.input[index++]
       column++;
       if (ch === "\n") {
         line++;
         column = 1;
       }
     }
+    
     return { index, line, column };
   }
 
