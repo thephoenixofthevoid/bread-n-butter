@@ -99,9 +99,18 @@ export class Parser<A> {
    * Yields the value from the parser after being called with the callback.
    */
   map<B>(fn: (value: A) => B): Parser<B> {
-    return this.chain((a) => {
-      return ok(fn(a));
-    });
+    const parent = this;
+    return new Parser(function (context) {
+      const report = parent.action(context)
+      if (report.type === ActionResultType.OK) {
+        return {
+          ...report, 
+          value: fn(report.value)
+        }
+      } else {
+        return report
+      }
+    })
   }
 
   /**
@@ -124,7 +133,8 @@ export class Parser<A> {
       return {
         type: ActionResultType.Fail,
         furthest: result.furthest,
-        expected
+        location: context.location,
+        expected: expected
       };
     });
   }
@@ -207,12 +217,31 @@ export class Parser<A> {
   /**
    * Returns a parser that adds name and start/end location metadata.
    */
-  node<S extends string>(name: S): Parser<ParseNode<S, A>> {
-    return all(location, this, location).map(([start, value, end]) => ({
+  node<S extends string>(name: S) {
+    return seqMap<[SourceLocation, A, SourceLocation], ParseNode<S, A>>([location, this, location], ([start, value, end]) => ({
       type: ResultTypeEnum.Node, name, value, start, end 
     }))
   }
 }
+
+// class MapParser<A, B> extends Parser<A> {
+
+//   constructor(fn: (value: B) => A, public parent: Parser<B>) {
+
+//     super(function (context) {
+//       const report = parent.action(context)
+//       if (report.type === ActionResultType.OK) {
+//         return {
+//           ...report, 
+//           value: fn(report.value)
+//         }
+//       } else {
+//         return report
+//       }
+//     })
+//   }
+
+// }
 
 function isRangeValid(min: number, max: number): boolean {
   return (
@@ -265,7 +294,7 @@ export function text<A extends string>(string: A): Parser<A> {
     const end = start + string.length;
 
     if (context.input.slice(start, end) === string) {
-      return context.at(end).ok(string);
+      return context.moveTo(end).ok(string);
     } else {
       return context.fail([string]);
     }
@@ -297,7 +326,7 @@ export function match(regexp: RegExp): Parser<string> {
     if (match) {
       const end = start + match[0].length;
       const string = context.input.slice(start, end);
-      context = context.at(end)
+      context = context.moveTo(end)
       return context.ok(string);
     }
     return context.fail([String(regexp)]);
@@ -310,21 +339,47 @@ type ManyParsers<A extends any[]> = {
   [P in keyof A]: Parser<A[P]>;
 };
 
+export function seqMap<A extends any[], B>(parsers: ManyParsers<A>, fn: (args: A) => B): Parser<A> {
+  return new Parser((context) => {
+    const reports: ActionOK<A>[] = []
+    const values = new Array(parsers.length) as A;
+  
+    for (let i = 0; i < parsers.length; i++) {
+        const parser: ManyParsers<A>[typeof i] = parsers[i];
+        const report = parser.action(context);
+
+        context = context.moveTo(report.location);
+        if (report.type === ActionResultType.Fail) 
+          return mergeAll(...reports, report)
+        reports.push(report);
+        values[i] = report.value
+    }
+
+    const report = context.ok(fn(values))
+    return mergeAll(...reports, report);
+  });
+}
+
+
+
 /** Parse all items, returning their values in the same order. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
   return new Parser((context) => {
-    var reports: ActionOK<A>[] = []
+    const reports: ActionOK<A>[] = []
+    const values = new Array(parsers.length) as A;
   
-    for (let parser of parsers) {
+    for (let i = 0; i < parsers.length; i++) {
+        const parser: ManyParsers<A>[typeof i] = parsers[i];
         const report = parser.action(context);
+
+        context = context.moveTo(report.location);
         if (report.type === ActionResultType.Fail) 
           return mergeAll(...reports, report)
         reports.push(report);
-        context = context.moveTo(report.location);
+        values[i] = report.value
     }
 
-    const values = reports.map(result => result.value)
     const report = context.ok(values)
     return mergeAll(...reports, report);
   });
@@ -336,7 +391,8 @@ export function choice<Parsers extends Parser<any>[]>(...parsers: Parsers): Pars
   return new Parser((context) => {
     var reports: ActionFail[] = []
   
-    for (let parser of parsers) {
+    for (let i = 0; i < parsers.length; i++) {
+        const parser = parsers[i];
         const report = parser.action(context);
         if (report.type === ActionResultType.OK) 
           return mergeAll(...reports, report)
@@ -395,11 +451,6 @@ class Context {
     return { index, line, column };
   }
 
-  at(index: number) {
-    const location = this._internal_move(index)
-    return this.moveTo(location)
-  }
-
   /**
    * Represents a successful parse ending before the given `index`, with the
    * specified `value`.
@@ -422,6 +473,7 @@ class Context {
     return {
       type: ActionResultType.Fail,
       furthest: this.location,
+      location: this.location,
       expected,
     };
   }
