@@ -404,14 +404,14 @@ class Context {
     }
     const start = this.location.index;
     const end = index;
-    const chunk = this.input.slice(start, end);
     let { line, column } = this.location;
-    for (const ch of chunk) {
+
+    for (let i = start; i < end; i++) {
+      const ch = this.input[i]
+      column++;
       if (ch === "\n") {
         line++;
         column = 1;
-      } else {
-        column++;
       }
     }
     return { index, line, column };
