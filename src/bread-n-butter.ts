@@ -18,7 +18,7 @@ export class Parser<A> {
    */
   parse(input: string): ParseOK<A> | ParseFail {
     const location = { index: 0, line: 1, column: 1 };
-    const context = new Context({ input, location });
+    const context = new Context(input, location);
     const result = this.skip(eof).action(context);
     if (result.type === "ActionOK") {
       return {
@@ -430,24 +430,17 @@ function union(a: string[], b: string[]): string[] {
  * Represents the current parsing context.
  */
 class Context {
-  /** the string being parsed */
-  input: string;
-  /** the current parse location */
-  location: SourceLocation;
 
-  constructor(options: { input: string; location: SourceLocation }) {
-    this.input = options.input;
-    this.location = options.location;
-  }
+  constructor(
+    public input: string, 
+    public location: SourceLocation
+  ) {}
 
   /**
    * Returns a new context with the supplied location and the current input.
    */
   moveTo(location: SourceLocation): Context {
-    return new Context({
-      input: this.input,
-      location,
-    });
+    return new Context(this.input, location);
   }
 
   private _internal_move(index: number): SourceLocation {
