@@ -1,0 +1,837 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VCF: "##fileformat=VCFv4.2\\n##FILTER=<ID=PASS,Description=\\"All filters passed\\">\\n##FILTER=<ID=FAIL,Description=\\"Fail the site if all alleles fail but for different reasons.\\">\\n##FILTER=<ID=base_qual,Description=\\"alt median base quality\\">\\n##FILTER=<ID=clustered_events,Description=\\"Clustered events observed in the tumor\\">\\n##FILTER=<ID=contamination,Description=\\"contamination\\">\\n##FILTER=<ID=duplicate,Description=\\"evidence for alt allele is overrepresented by apparent duplicates\\">\\n##FILTER=<ID=fragment,Description=\\"abs(ref - alt) median fragment length\\">\\n##FILTER=<ID=germline,Description=\\"Evidence indicates this site is germline, not somatic\\">\\n##FILTER=<ID=haplotype,Description=\\"Variant near filtered variant on same haplotype.\\">\\n##FILTER=<ID=low_allele_frac,Description=\\"Allele fraction is below specified threshold\\">\\n##FILTER=<ID=map_qual,Description=\\"ref - alt median mapping quality\\">\\n##FILTER=<ID=multiallelic,Description=\\"Site filtered because too many alt alleles pass tumor LOD\\">\\n##FILTER=<ID=n_ratio,Description=\\"Ratio of N to alt exceeds specified ratio\\">\\n##FILTER=<ID=normal_artifact,Description=\\"artifact_in_normal\\">\\n##FILTER=<ID=orientation,Description=\\"orientation bias detected by the orientation bias mixture model\\">\\n##FILTER=<ID=panel_of_normals,Description=\\"Blacklisted site in panel of normals\\">\\n##FILTER=<ID=position,Description=\\"median distance of alt variants from end of reads\\">\\n##FILTER=<ID=possible_numt,Description=\\"Allele depth is below expected coverage of NuMT in autosome\\">\\n##FILTER=<ID=slippage,Description=\\"Site filtered due to contraction of short tandem repeat region\\">\\n##FILTER=<ID=strand_bias,Description=\\"Evidence for alt allele comes from one read direction only\\">\\n##FILTER=<ID=strict_strand,Description=\\"Evidence for alt allele is not represented in both directions\\">\\n##FILTER=<ID=weak_evidence,Description=\\"Mutation does not meet likelihood threshold\\">\\n##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\\"Allelic depths for the ref and alt alleles in the order listed\\">\\n##FORMAT=<ID=AF,Number=A,Type=Float,Description=\\"Allele fractions of alternate alleles in the tumor\\">\\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\\"Approximate read depth (reads with MQ=255 or with bad mates are filtered)\\">\\n##FORMAT=<ID=F1R2,Number=R,Type=Integer,Description=\\"Count of reads in F1R2 pair orientation supporting each allele\\">\\n##FORMAT=<ID=F2R1,Number=R,Type=Integer,Description=\\"Count of reads in F2R1 pair orientation supporting each allele\\">\\n##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\\"Genotype Quality\\">\\n##FORMAT=<ID=GT,Number=1,Type=String,Description=\\"Genotype\\">\\n##FORMAT=<ID=PGT,Number=1,Type=String,Description=\\"Physical phasing haplotype information, describing how the alternate alleles are phased in relation to one another; will always be heterozygous and is not intended to describe called alleles\\">\\n##FORMAT=<ID=PID,Number=1,Type=String,Description=\\"Physical phasing ID information, where each unique ID within a given sample (but not across samples) connects records within a phasing group\\">\\n##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\\">\\n##FORMAT=<ID=PS,Number=1,Type=Integer,Description=\\"Phasing set (typically the position of the first variant in the set)\\">\\n##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\\"Per-sample component statistics which comprise the Fisher's Exact Test to detect strand bias.\\">\\n##GATKCommandLine=<ID=FilterMutectCalls,CommandLine=\\"FilterMutectCalls --output /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.vcf.gz --stats /home/gorbachevalex87/onco_test/somatic/mutect/mutect_new.vcf.gz.stats --contamination-table /home/gorbachevalex87/onco_test/somatic/mutect/pair_calculatecontamination.table --tumor-segmentation /home/gorbachevalex87/onco_test/somatic/mutect/segments.table --variant /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020.vcf.gz --reference /home/gorbachevalex87/onco_test/ref_data/genome/all/ref_genome.fa --threshold-strategy OPTIMAL_F_SCORE --f-score-beta 1.0 --false-discovery-rate 0.05 --initial-threshold 0.1 --mitochondria-mode false --max-events-in-region 2 --max-alt-allele-count 1 --unique-alt-read-count 0 --min-median-mapping-quality 30 --min-median-base-quality 20 --max-median-fragment-length-difference 10000 --min-median-read-position 1 --max-n-ratio Infinity --min-reads-per-strand 0 --min-allele-fraction 0.0 --contamination-estimate 0.0 --log-snv-prior -13.815510557964275 --log-indel-prior -16.11809565095832 --log-artifact-prior -2.302585092994046 --normal-p-value-threshold 0.001 --min-slippage-length 8 --pcr-slippage-rate 0.1 --distance-on-haplotype 100 --long-indel-length 5 --interval-set-rule UNION --interval-padding 0 --interval-exclusion-padding 0 --interval-merging-rule ALL --read-validation-stringency SILENT --seconds-between-progress-updates 10.0 --disable-sequence-dictionary-validation false --create-output-bam-index true --create-output-bam-md5 false --create-output-variant-index true --create-output-variant-md5 false --lenient false --add-output-sam-program-record true --add-output-vcf-command-line true --cloud-prefetch-buffer 40 --cloud-index-prefetch-buffer -1 --disable-bam-index-caching false --sites-only-vcf-output false --help false --version false --showHidden false --verbosity INFO --QUIET false --use-jdk-deflater false --use-jdk-inflater false --gcs-max-retries 20 --gcs-project-for-requester-pays  --disable-tool-default-read-filters false\\",Version=\\"4.1.9.0\\",Date=\\"December 9, 2020 7:12:42 PM MSK\\">\\n##GATKCommandLine=<ID=LeftAlignAndTrimVariants,CommandLine=\\"LeftAlignAndTrimVariants --output /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.pass.normalized.vcf --variant /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.pass.vcf --reference /home/gorbachevalex87/onco_test/ref_data/genome/all/ref_genome.fa --dont-trim-alleles false --split-multi-allelics false --keep-original-ac false --max-indel-length 200 --max-leading-bases 1000 --suppress-reference-path false --interval-set-rule UNION --interval-padding 0 --interval-exclusion-padding 0 --interval-merging-rule ALL --read-validation-stringency SILENT --seconds-between-progress-updates 10.0 --disable-sequence-dictionary-validation false --create-output-bam-index true --create-output-bam-md5 false --create-output-variant-index true --create-output-variant-md5 false --lenient false --add-output-sam-program-record true --add-output-vcf-command-line true --cloud-prefetch-buffer 40 --cloud-index-prefetch-buffer -1 --disable-bam-index-caching false --sites-only-vcf-output false --help false --version false --showHidden false --verbosity INFO --QUIET false --use-jdk-deflater false --use-jdk-inflater false --gcs-max-retries 20 --gcs-project-for-requester-pays  --disable-tool-default-read-filters false\\",Version=\\"4.1.9.0\\",Date=\\"December 9, 2020 11:37:49 PM MSK\\">\\n##INFO=<ID=AS_FilterStatus,Number=A,Type=String,Description=\\"Filter status for each allele, as assessed by ApplyRecalibration. Note that the VCF filter field will reflect the most lenient/sensitive status across all alleles.\\">\\n##INFO=<ID=AS_SB_TABLE,Number=1,Type=String,Description=\\"Allele-specific forward/reverse read counts for strand bias tests. Includes the reference and alleles separated by |.\\">\\n##INFO=<ID=AS_UNIQ_ALT_READ_COUNT,Number=A,Type=Integer,Description=\\"Number of reads with unique start and mate end positions for each alt at a variant site\\">\\n##INFO=<ID=CONTQ,Number=1,Type=Float,Description=\\"Phred-scaled qualities that alt allele are not due to contamination\\">\\n##INFO=<ID=DP,Number=1,Type=Integer,Description=\\"Approximate read depth; some reads may have been filtered\\">\\n##INFO=<ID=ECNT,Number=1,Type=Integer,Description=\\"Number of events in this haplotype\\">\\n##INFO=<ID=GERMQ,Number=1,Type=Integer,Description=\\"Phred-scaled quality that alt alleles are not germline variants\\">\\n##INFO=<ID=MBQ,Number=R,Type=Integer,Description=\\"median base quality\\">\\n##INFO=<ID=MFRL,Number=R,Type=Integer,Description=\\"median fragment length\\">\\n##INFO=<ID=MMQ,Number=R,Type=Integer,Description=\\"median mapping quality\\">\\n##INFO=<ID=MPOS,Number=A,Type=Integer,Description=\\"median distance from end of read\\">\\n##INFO=<ID=NALOD,Number=A,Type=Float,Description=\\"Negative log 10 odds of artifact in normal with same allele fraction as tumor\\">\\n##INFO=<ID=NCount,Number=1,Type=Integer,Description=\\"Count of N bases in the pileup\\">\\n##INFO=<ID=NLOD,Number=A,Type=Float,Description=\\"Normal log 10 likelihood ratio of diploid het or hom alt genotypes\\">\\n##INFO=<ID=OCM,Number=1,Type=Integer,Description=\\"Number of alt reads whose original alignment doesn't match the current contig.\\">\\n##INFO=<ID=PON,Number=0,Type=Flag,Description=\\"site found in panel of normals\\">\\n##INFO=<ID=POPAF,Number=A,Type=Float,Description=\\"negative log 10 population allele frequencies of alt alleles\\">\\n##INFO=<ID=ROQ,Number=1,Type=Float,Description=\\"Phred-scaled qualities that alt allele are not due to read orientation artifact\\">\\n##INFO=<ID=RPA,Number=R,Type=Integer,Description=\\"Number of times tandem repeat unit is repeated, for each allele (including reference)\\">\\n##INFO=<ID=RU,Number=1,Type=String,Description=\\"Tandem repeat unit (bases)\\">\\n##INFO=<ID=SEQQ,Number=1,Type=Integer,Description=\\"Phred-scaled quality that alt alleles are not sequencing errors\\">\\n##INFO=<ID=STR,Number=0,Type=Flag,Description=\\"Variant is a short tandem repeat\\">\\n##INFO=<ID=STRANDQ,Number=1,Type=Integer,Description=\\"Phred-scaled quality of strand bias artifact\\">\\n##INFO=<ID=STRQ,Number=1,Type=Integer,Description=\\"Phred-scaled quality that alt alleles in STRs are not polymerase slippage errors\\">\\n##INFO=<ID=TLOD,Number=A,Type=Float,Description=\\"Log 10 likelihood ratio score of variant existing versus not existing\\">\\n##MutectVersion=2.2\\n##bcftools_viewCommand=view -f PASS mutect_somatic_2020_oncefiltered.vcf.gz; Date=Wed Dec  9 19:17:12 2020\\n##bcftools_viewVersion=1.10.2+htslib-1.10.2\\n##contig=<ID=chr1,length=248956422,assembly=ref_genome.fa>\\n##contig=<ID=chr2,length=242193529,assembly=ref_genome.fa>\\n##contig=<ID=chr3,length=198295559,assembly=ref_genome.fa>\\n##contig=<ID=chr4,length=190214555,assembly=ref_genome.fa>\\n##contig=<ID=chr5,length=181538259,assembly=ref_genome.fa>\\n##contig=<ID=chr6,length=170805979,assembly=ref_genome.fa>\\n##contig=<ID=chr7,length=159345973,assembly=ref_genome.fa>\\n##contig=<ID=chr8,length=145138636,assembly=ref_genome.fa>\\n##contig=<ID=chr9,length=138394717,assembly=ref_genome.fa>\\n##contig=<ID=chr10,length=133797422,assembly=ref_genome.fa>\\n##contig=<ID=chr11,length=135086622,assembly=ref_genome.fa>\\n##contig=<ID=chr12,length=133275309,assembly=ref_genome.fa>\\n##contig=<ID=chr13,length=114364328,assembly=ref_genome.fa>\\n##contig=<ID=chr14,length=107043718,assembly=ref_genome.fa>\\n##contig=<ID=chr15,length=101991189,assembly=ref_genome.fa>\\n##contig=<ID=chr16,length=90338345,assembly=ref_genome.fa>\\n##contig=<ID=chr17,length=83257441,assembly=ref_genome.fa>\\n##contig=<ID=chr18,length=80373285,assembly=ref_genome.fa>\\n##contig=<ID=chr19,length=58617616,assembly=ref_genome.fa>\\n##contig=<ID=chr20,length=64444167,assembly=ref_genome.fa>\\n##contig=<ID=chr21,length=46709983,assembly=ref_genome.fa>\\n##contig=<ID=chr22,length=50818468,assembly=ref_genome.fa>\\n##contig=<ID=chrX,length=156040895,assembly=ref_genome.fa>\\n##contig=<ID=chrY,length=57227415,assembly=ref_genome.fa>\\n##contig=<ID=chrM,length=16569,assembly=ref_genome.fa>\\n##filtering_status=These calls have been filtered by FilterMutectCalls to label false positives with a list of failed filters and true positives with PASS.\\n##normal_sample=620103\\n##source=FilterMutectCalls\\n##source=LeftAlignAndTrimVariants\\n##tumor_sample=610103\\n##INFO=<ID=OLD_MULTIALLELIC,Number=1,Type=String,Description=\\"Original chr:pos:ref:alt encoding\\">" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    Object {
+      "fileformat": "VCFv4.2",
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"All filters passed\\"",
+          "ID": "PASS",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Fail the site if all alleles fail but for different reasons.\\"",
+          "ID": "FAIL",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"alt median base quality\\"",
+          "ID": "base_qual",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Clustered events observed in the tumor\\"",
+          "ID": "clustered_events",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"contamination\\"",
+          "ID": "contamination",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"evidence for alt allele is overrepresented by apparent duplicates\\"",
+          "ID": "duplicate",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"abs(ref - alt) median fragment length\\"",
+          "ID": "fragment",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Evidence indicates this site is germline, not somatic\\"",
+          "ID": "germline",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Variant near filtered variant on same haplotype.\\"",
+          "ID": "haplotype",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Allele fraction is below specified threshold\\"",
+          "ID": "low_allele_frac",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"ref - alt median mapping quality\\"",
+          "ID": "map_qual",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Site filtered because too many alt alleles pass tumor LOD\\"",
+          "ID": "multiallelic",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Ratio of N to alt exceeds specified ratio\\"",
+          "ID": "n_ratio",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"artifact_in_normal\\"",
+          "ID": "normal_artifact",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"orientation bias detected by the orientation bias mixture model\\"",
+          "ID": "orientation",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Blacklisted site in panel of normals\\"",
+          "ID": "panel_of_normals",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"median distance of alt variants from end of reads\\"",
+          "ID": "position",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Allele depth is below expected coverage of NuMT in autosome\\"",
+          "ID": "possible_numt",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Site filtered due to contraction of short tandem repeat region\\"",
+          "ID": "slippage",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Evidence for alt allele comes from one read direction only\\"",
+          "ID": "strand_bias",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Evidence for alt allele is not represented in both directions\\"",
+          "ID": "strict_strand",
+        },
+      ],
+    },
+    Object {
+      "FILTER": Array [
+        Object {
+          "Description": "\\"Mutation does not meet likelihood threshold\\"",
+          "ID": "weak_evidence",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Allelic depths for the ref and alt alleles in the order listed\\"",
+          "ID": "AD",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Allele fractions of alternate alleles in the tumor\\"",
+          "ID": "AF",
+          "Number": "A",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Approximate read depth (reads with MQ=255 or with bad mates are filtered)\\"",
+          "ID": "DP",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Count of reads in F1R2 pair orientation supporting each allele\\"",
+          "ID": "F1R2",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Count of reads in F2R1 pair orientation supporting each allele\\"",
+          "ID": "F2R1",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Genotype Quality\\"",
+          "ID": "GQ",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Genotype\\"",
+          "ID": "GT",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Physical phasing haplotype information, describing how the alternate alleles are phased in relation to one another; will always be heterozygous and is not intended to describe called alleles\\"",
+          "ID": "PGT",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Physical phasing ID information, where each unique ID within a given sample (but not across samples) connects records within a phasing group\\"",
+          "ID": "PID",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\\"",
+          "ID": "PL",
+          "Number": "G",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Phasing set (typically the position of the first variant in the set)\\"",
+          "ID": "PS",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "FORMAT": Array [
+        Object {
+          "Description": "\\"Per-sample component statistics which comprise the Fisher's Exact Test to detect strand bias.\\"",
+          "ID": "SB",
+          "Number": "4",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "GATKCommandLine": Array [
+        Object {
+          "CommandLine": "\\"FilterMutectCalls --output /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.vcf.gz --stats /home/gorbachevalex87/onco_test/somatic/mutect/mutect_new.vcf.gz.stats --contamination-table /home/gorbachevalex87/onco_test/somatic/mutect/pair_calculatecontamination.table --tumor-segmentation /home/gorbachevalex87/onco_test/somatic/mutect/segments.table --variant /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020.vcf.gz --reference /home/gorbachevalex87/onco_test/ref_data/genome/all/ref_genome.fa --threshold-strategy OPTIMAL_F_SCORE --f-score-beta 1.0 --false-discovery-rate 0.05 --initial-threshold 0.1 --mitochondria-mode false --max-events-in-region 2 --max-alt-allele-count 1 --unique-alt-read-count 0 --min-median-mapping-quality 30 --min-median-base-quality 20 --max-median-fragment-length-difference 10000 --min-median-read-position 1 --max-n-ratio Infinity --min-reads-per-strand 0 --min-allele-fraction 0.0 --contamination-estimate 0.0 --log-snv-prior -13.815510557964275 --log-indel-prior -16.11809565095832 --log-artifact-prior -2.302585092994046 --normal-p-value-threshold 0.001 --min-slippage-length 8 --pcr-slippage-rate 0.1 --distance-on-haplotype 100 --long-indel-length 5 --interval-set-rule UNION --interval-padding 0 --interval-exclusion-padding 0 --interval-merging-rule ALL --read-validation-stringency SILENT --seconds-between-progress-updates 10.0 --disable-sequence-dictionary-validation false --create-output-bam-index true --create-output-bam-md5 false --create-output-variant-index true --create-output-variant-md5 false --lenient false --add-output-sam-program-record true --add-output-vcf-command-line true --cloud-prefetch-buffer 40 --cloud-index-prefetch-buffer -1 --disable-bam-index-caching false --sites-only-vcf-output false --help false --version false --showHidden false --verbosity INFO --QUIET false --use-jdk-deflater false --use-jdk-inflater false --gcs-max-retries 20 --gcs-project-for-requester-pays  --disable-tool-default-read-filters false\\"",
+          "Date": "\\"December 9, 2020 7:12:42 PM MSK\\"",
+          "ID": "FilterMutectCalls",
+          "Version": "\\"4.1.9.0\\"",
+        },
+      ],
+    },
+    Object {
+      "GATKCommandLine": Array [
+        Object {
+          "CommandLine": "\\"LeftAlignAndTrimVariants --output /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.pass.normalized.vcf --variant /home/gorbachevalex87/onco_test/somatic/mutect/mutect_somatic_2020_oncefiltered.pass.vcf --reference /home/gorbachevalex87/onco_test/ref_data/genome/all/ref_genome.fa --dont-trim-alleles false --split-multi-allelics false --keep-original-ac false --max-indel-length 200 --max-leading-bases 1000 --suppress-reference-path false --interval-set-rule UNION --interval-padding 0 --interval-exclusion-padding 0 --interval-merging-rule ALL --read-validation-stringency SILENT --seconds-between-progress-updates 10.0 --disable-sequence-dictionary-validation false --create-output-bam-index true --create-output-bam-md5 false --create-output-variant-index true --create-output-variant-md5 false --lenient false --add-output-sam-program-record true --add-output-vcf-command-line true --cloud-prefetch-buffer 40 --cloud-index-prefetch-buffer -1 --disable-bam-index-caching false --sites-only-vcf-output false --help false --version false --showHidden false --verbosity INFO --QUIET false --use-jdk-deflater false --use-jdk-inflater false --gcs-max-retries 20 --gcs-project-for-requester-pays  --disable-tool-default-read-filters false\\"",
+          "Date": "\\"December 9, 2020 11:37:49 PM MSK\\"",
+          "ID": "LeftAlignAndTrimVariants",
+          "Version": "\\"4.1.9.0\\"",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Filter status for each allele, as assessed by ApplyRecalibration. Note that the VCF filter field will reflect the most lenient/sensitive status across all alleles.\\"",
+          "ID": "AS_FilterStatus",
+          "Number": "A",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Allele-specific forward/reverse read counts for strand bias tests. Includes the reference and alleles separated by |.\\"",
+          "ID": "AS_SB_TABLE",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Number of reads with unique start and mate end positions for each alt at a variant site\\"",
+          "ID": "AS_UNIQ_ALT_READ_COUNT",
+          "Number": "A",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled qualities that alt allele are not due to contamination\\"",
+          "ID": "CONTQ",
+          "Number": "1",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Approximate read depth; some reads may have been filtered\\"",
+          "ID": "DP",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Number of events in this haplotype\\"",
+          "ID": "ECNT",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled quality that alt alleles are not germline variants\\"",
+          "ID": "GERMQ",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"median base quality\\"",
+          "ID": "MBQ",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"median fragment length\\"",
+          "ID": "MFRL",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"median mapping quality\\"",
+          "ID": "MMQ",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"median distance from end of read\\"",
+          "ID": "MPOS",
+          "Number": "A",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Negative log 10 odds of artifact in normal with same allele fraction as tumor\\"",
+          "ID": "NALOD",
+          "Number": "A",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Count of N bases in the pileup\\"",
+          "ID": "NCount",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Normal log 10 likelihood ratio of diploid het or hom alt genotypes\\"",
+          "ID": "NLOD",
+          "Number": "A",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Number of alt reads whose original alignment doesn't match the current contig.\\"",
+          "ID": "OCM",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"site found in panel of normals\\"",
+          "ID": "PON",
+          "Number": "0",
+          "Type": "Flag",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"negative log 10 population allele frequencies of alt alleles\\"",
+          "ID": "POPAF",
+          "Number": "A",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled qualities that alt allele are not due to read orientation artifact\\"",
+          "ID": "ROQ",
+          "Number": "1",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Number of times tandem repeat unit is repeated, for each allele (including reference)\\"",
+          "ID": "RPA",
+          "Number": "R",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Tandem repeat unit (bases)\\"",
+          "ID": "RU",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled quality that alt alleles are not sequencing errors\\"",
+          "ID": "SEQQ",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Variant is a short tandem repeat\\"",
+          "ID": "STR",
+          "Number": "0",
+          "Type": "Flag",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled quality of strand bias artifact\\"",
+          "ID": "STRANDQ",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Phred-scaled quality that alt alleles in STRs are not polymerase slippage errors\\"",
+          "ID": "STRQ",
+          "Number": "1",
+          "Type": "Integer",
+        },
+      ],
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Log 10 likelihood ratio score of variant existing versus not existing\\"",
+          "ID": "TLOD",
+          "Number": "A",
+          "Type": "Float",
+        },
+      ],
+    },
+    Object {
+      "MutectVersion": "2.2",
+    },
+    Object {
+      "bcftools_viewCommand": "view -f PASS mutect_somatic_2020_oncefiltered.vcf.gz; Date=Wed Dec  9 19:17:12 2020",
+    },
+    Object {
+      "bcftools_viewVersion": "1.10.2+htslib-1.10.2",
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr1",
+          "assembly": "ref_genome.fa",
+          "length": "248956422",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr2",
+          "assembly": "ref_genome.fa",
+          "length": "242193529",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr3",
+          "assembly": "ref_genome.fa",
+          "length": "198295559",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr4",
+          "assembly": "ref_genome.fa",
+          "length": "190214555",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr5",
+          "assembly": "ref_genome.fa",
+          "length": "181538259",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr6",
+          "assembly": "ref_genome.fa",
+          "length": "170805979",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr7",
+          "assembly": "ref_genome.fa",
+          "length": "159345973",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr8",
+          "assembly": "ref_genome.fa",
+          "length": "145138636",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr9",
+          "assembly": "ref_genome.fa",
+          "length": "138394717",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr10",
+          "assembly": "ref_genome.fa",
+          "length": "133797422",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr11",
+          "assembly": "ref_genome.fa",
+          "length": "135086622",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr12",
+          "assembly": "ref_genome.fa",
+          "length": "133275309",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr13",
+          "assembly": "ref_genome.fa",
+          "length": "114364328",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr14",
+          "assembly": "ref_genome.fa",
+          "length": "107043718",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr15",
+          "assembly": "ref_genome.fa",
+          "length": "101991189",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr16",
+          "assembly": "ref_genome.fa",
+          "length": "90338345",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr17",
+          "assembly": "ref_genome.fa",
+          "length": "83257441",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr18",
+          "assembly": "ref_genome.fa",
+          "length": "80373285",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr19",
+          "assembly": "ref_genome.fa",
+          "length": "58617616",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr20",
+          "assembly": "ref_genome.fa",
+          "length": "64444167",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr21",
+          "assembly": "ref_genome.fa",
+          "length": "46709983",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chr22",
+          "assembly": "ref_genome.fa",
+          "length": "50818468",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chrX",
+          "assembly": "ref_genome.fa",
+          "length": "156040895",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chrY",
+          "assembly": "ref_genome.fa",
+          "length": "57227415",
+        },
+      ],
+    },
+    Object {
+      "contig": Array [
+        Object {
+          "ID": "chrM",
+          "assembly": "ref_genome.fa",
+          "length": "16569",
+        },
+      ],
+    },
+    Object {
+      "filtering_status": "These calls have been filtered by FilterMutectCalls to label false positives with a list of failed filters and true positives with PASS.",
+    },
+    Object {
+      "normal_sample": "620103",
+    },
+    Object {
+      "source": "FilterMutectCalls",
+    },
+    Object {
+      "source": "LeftAlignAndTrimVariants",
+    },
+    Object {
+      "tumor_sample": "610103",
+    },
+    Object {
+      "INFO": Array [
+        Object {
+          "Description": "\\"Original chr:pos:ref:alt encoding\\"",
+          "ID": "OLD_MULTIALLELIC",
+          "Number": "1",
+          "Type": "String",
+        },
+      ],
+    },
+  ],
+}
+`;

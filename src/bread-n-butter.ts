@@ -1,6 +1,6 @@
 import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK, ActionFail } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
-export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } 
+export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult }
 
 /**
  * The parsing action. Takes a parsing Context and returns an ActionResult
@@ -47,8 +47,8 @@ export class Parser<A> {
     }
 
     throw new Error(`parse error at line ${result.location.line} ` +
-                                 `column ${result.location.column}: ` +
-                               `expected ${result.expected.join(", ")}`);
+      `column ${result.location.column}: ` +
+      `expected ${result.expected.join(", ")}`);
   }
 
   /**
@@ -104,7 +104,7 @@ export class Parser<A> {
       const report = parent.action(context)
       if (report.type === ActionResultType.OK) {
         return {
-          ...report, 
+          ...report,
           value: fn(report.value)
         }
       } else {
@@ -112,8 +112,6 @@ export class Parser<A> {
       }
     })
   }
-
-
 
   /**
    * Returns the callback called with the parser.
@@ -144,16 +142,16 @@ export class Parser<A> {
   /**
    * Wraps the current parser with before & after parsers.
    */
-  wrap<B, C>(before: Parser<B>, after: Parser<C>): Parser<A> {
-    return before.next(this).skip(after);
+  wrap<B = string, C = string>(before: Parser<B> | string, after: Parser<C> | string): Parser<A> {
+    return toParser(before).next(this).skip(toParser(after));
   }
 
   /**
    * Ignores content before and after the current parser, based on the supplied
    * parser.
    */
-  trim<B>(beforeAndAfter: Parser<B>): Parser<A> {
-    return this.wrap(beforeAndAfter, beforeAndAfter);
+  trim<B = string>(beforeAndAfter: Parser<B> | string): Parser<A> {
+    return this.wrap(toParser(beforeAndAfter), toParser(beforeAndAfter));
   }
 
   /**
@@ -161,79 +159,92 @@ export class Parser<A> {
    * in an array.
    */
   repeat(min = 0, max = Infinity): Parser<A[]> {
-    if (!isRangeValid(min, max)) {
-      throw new Error(`repeat: bad range (${min} to ${max})`);
-    }
-    if (min === 0) {
-      return this.repeat(1, max).or(ok([]));
-    }
-    return new Parser((context) => {
-      const items: A[] = [];
-      let result = this.action(context);
-      if (result.type === ActionResultType.Fail) {
-        return result;
-      }
-      while (result.type === ActionResultType.OK && items.length < max) {
-        items.push(result.value);
-        if (result.location.index === context.location.index) {
-          throw new Error(
-            "infinite loop detected; don't call .repeat() with parsers that can accept zero characters"
-          );
-        }
-        context = context.moveTo(result.location);
-        result = merge(result, this.action(context));
-      }
-      if (result.type === ActionResultType.Fail && items.length < min) {
-        return result;
-      }
-      return merge(result, context.ok(items));
-    });
+    if (!isRangeValid(min, max)) throw new Error(`repeat: bad range (${min} to ${max})`);
+    return Repeate(this, min, max);
   }
 
   /**
    * Returns a parser that parses between min and max times, separated by the separator
    * parser supplied.
    */
-  sepBy<B>(separator: Parser<B>, min = 0, max = Infinity): Parser<A[]> {
-    if (!isRangeValid(min, max)) {
-      throw new Error(`sepBy: bad range (${min} to ${max})`);
-    }
-    if (min === 0) {
-      return this.sepBy(separator, 1, max).or(ok([]));
-    }
-    // We also know that min=1 due to previous checks, so we can skip the call
-    // to `repeat` here
-    if (max === 1) {
-      return this.map((x) => [x]);
-    }
-    return this.chain((first) => {
-      return separator
-        .next(this)
-        .repeat(min - 1, max - 1)
-        .map((rest) => {
-          return [first, ...rest];
-        });
-    });
+  sepBy<B = string>(separator: Parser<B> | string, min = 0, max = Infinity): Parser<A[]> {
+    if (!isRangeValid(min, max)) throw new Error(`sepBy: bad range (${min} to ${max})`);
+    return Separated(this, toParser(separator), min, max)
   }
 
   /**
    * Returns a parser that adds name and start/end location metadatb
    */
   node<S extends string>(name: S) {
-    return seqMap<[SourceLocation, A, SourceLocation], ParseNode<S, A>>([location, this, location], ([start, value, end]) => ({
-      type: ResultTypeEnum.Node, name, value, start, end 
-    }))
+    return all(location, this, location)
+          .map(function ([start, value, end]) {
+            const type = ResultTypeEnum.Node
+            return { type, name, value, start, end }
+          })
+  }
+}
+
+
+export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min: number, max: number): Parser<A[]> {
+
+  itemParser = toParser(itemParser)
+  sepParser = toParser(sepParser)
+  const pairParser = sepParser.next(itemParser)
+
+  return new Parser(function (context) {
+    var report: ActionResult<A> = context.fail([]) as ActionFail;
+    var values: A[] = [];
+
+    while (values.length < max) {
+      if (values.length > 0) {
+        report = merge(report, pairParser.action(context))
+      } else {
+        report = merge(report, itemParser.action(context))
+      }
+      if (report.type !== ActionResultType.OK) break;
+      context = context.moveTo(report.location)
+      values.push(report.value)
+    }
+    if (values.length < min) {
+      return merge(report, context.fail([]))
+    }
+    return merge(report, context.ok(values))
+  })
+}
+
+
+
+export function Repeate<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
+  return new Parser(function (context) {
+    var report: ActionResult<A> = context.fail([]) as ActionFail;
+    var values: A[] = [];
+
+    while (values.length < max) {
+      report = merge(report, itemParser.action(context))
+      if (report.type !== ActionResultType.OK) break;
+      validateInfiniteLoop(context, report);
+      context = context.moveTo(report.location)
+      values.push(report.value)
+    }
+    if (values.length < min) {
+      return merge(report, context.fail([]))
+    }
+    return merge(report, context.ok(values))
+  })
+}
+
+function validateInfiniteLoop<A>(context: Context, result: ActionResult<A>) {
+  if (result.location.index === context.location.index) {
+    throw new Error(
+      "infinite loop detected; don't call .repeat() with parsers that can accept zero characters"
+    );
   }
 }
 
 function isRangeValid(min: number, max: number): boolean {
-  return (
-    min <= max &&
-    min >= 0 &&
-    max >= 0 &&
-    Number.isInteger(min) &&
-    min !== Infinity &&
-    (Number.isInteger(max) || max === Infinity)
+  return (min <= max && min >= 0 && max >= 0 && 
+    Number.isInteger(min) && min !== Infinity &&
+     (Number.isInteger(max) || max === Infinity)
   );
 }
 
@@ -300,7 +311,7 @@ export function notFollowing<B>(parser: Parser<B>) {
   return new Parser(function (context) {
     const a = parser.action(context)
     if (a.type === ActionResultType.OK) {
-      const b = context.fail<null>([ `not '${a.value}'` ])
+      const b = context.fail<null>([`not '${a.value}'`])
       return merge(a, b)
     }
     return merge(a, context.ok(null))
@@ -341,31 +352,11 @@ export function match(regexp: RegExp): Parser<string> {
 /** A tuple of parsers */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ManyParsers<A extends any[]> = {
-  [P in keyof A]: Parser<A[P]>|A[P];
+  [P in keyof A]: Parser<A[P]> | A[P];
 };
 
-export function seqMap<A extends any[], B>(parsers: ManyParsers<A>, fn: (args: A) => B): Parser<A> {
-  return new Parser((context) => {
-    const reports: ActionOK<A>[] = []
-    const values = new Array(parsers.length) as A;
-  
-    for (let i = 0; i < parsers.length; i++) {
-        const parser: ManyParsers<A>[typeof i] = parsers[i];
-        const report = parser.action(context);
 
-        context = context.moveTo(report.location);
-        if (report.type === ActionResultType.Fail) 
-          return mergeAll(...reports, report)
-        reports.push(report);
-        values[i] = report.value
-    }
-
-    const report = context.ok(fn(values))
-    return mergeAll(...reports, report);
-  });
-}
-
-function toParser(parser:string|RegExp|Parser<any>) {
+function toParser(parser: string | RegExp | Parser<any>) {
   if (typeof parser === "string") {
     return text(parser)
   }
@@ -379,22 +370,20 @@ function toParser(parser:string|RegExp|Parser<any>) {
 /** Parse all items, returning their values in the same order. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
-
   parsers = parsers.map(toParser) as ManyParsers<A>;
-
   return new Parser((context) => {
     const reports: ActionOK<A>[] = []
     const values = new Array(parsers.length) as A;
-  
-    for (let i = 0; i < parsers.length; i++) {
-        const parser: ManyParsers<A>[typeof i] = parsers[i];
-        const report = parser.action(context);
 
-        context = context.moveTo(report.location);
-        if (report.type === ActionResultType.Fail) 
-          return mergeAll(...reports, report)
-        reports.push(report);
-        values[i] = report.value
+    for (let i = 0; i < parsers.length; i++) {
+      const parser: ManyParsers<A>[typeof i] = parsers[i];
+      const report = parser.action(context);
+
+      context = context.moveTo(report.location);
+      if (report.type === ActionResultType.Fail)
+        return mergeAll(...reports, report)
+      reports.push(report);
+      values[i] = report.value
     }
 
     const report = context.ok(values)
@@ -404,19 +393,17 @@ export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
 
 /** Parse using the parsers given, returning the first one that succeeds. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function choice<Parsers extends (Parser<any>|any)[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
-
+export function choice<Parsers extends (Parser<any> | any)[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
   parsers = parsers.map(toParser) as Parsers;
 
   return new Parser((context) => {
     var reports: ActionFail[] = []
-  
     for (let i = 0; i < parsers.length; i++) {
-        const parser = parsers[i];
-        const report = parser.action(context);
-        if (report.type === ActionResultType.OK) 
-          return mergeAll(...reports, report)
-        reports.push(report);
+      const parser = parsers[i];
+      const report = parser.action(context);
+      if (report.type === ActionResultType.OK)
+        return mergeAll(...reports, report)
+      reports.push(report);
     }
 
     return mergeAll(...reports);
@@ -440,15 +427,12 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
  */
 class Context {
 
-  constructor(
-    public input: string,
-    public location: SourceLocation
-  ) { }
+  constructor(public input: string, public location: SourceLocation) { }
 
   /**
    * Returns a new context with the supplied location and the current input.
    */
-  moveTo(location: SourceLocation|number): Context {
+  moveTo(location: SourceLocation | number): Context {
     if (typeof location === "number") {
       return new Context(this.input, this._internal_move(location));
     } else {
@@ -467,7 +451,7 @@ class Context {
         column = 1;
       }
     }
-    
+
     return { index, line, column };
   }
 
@@ -505,27 +489,21 @@ function mergeAll(...rest: ActionResult<any>[]): ActionResult<any> {
   return rest.reduce(merge)
 }
 
-
 /**
 * Merge two sequential `ActionResult`s so that the `expected` and location data
 * is preserved correctly.
 */
 function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
   if (a.furthest.index > b.furthest.index) return {
-    ...b,
-    expected: a.expected,
-    furthest: a.furthest
-  }
+    ...b, expected: a.expected, furthest: a.furthest
+  };
 
   if (a.furthest.index < b.furthest.index) return {
-    ...b,
-    expected: b.expected,
-    furthest: b.furthest
-  }
+    ...b, expected: b.expected, furthest: b.furthest
+  };
 
+  const expected = [...new Set([...a.expected, ...b.expected])]
   return {
-    ...b,
-    expected: [...new Set([...a.expected, ...b.expected])],
-    furthest: a.furthest
-  }
+    ...b, expected: expected, furthest: a.furthest
+  };
 }
