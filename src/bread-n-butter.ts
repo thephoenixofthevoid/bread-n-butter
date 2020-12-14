@@ -133,6 +133,7 @@ export class Parser<A> {
       }
       return {
         type: ActionResultType.Fail,
+        value: undefined,
         furthest: result.furthest,
         location: context.location,
         expected: expected

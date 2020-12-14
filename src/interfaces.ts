@@ -56,6 +56,7 @@ export interface ActionOK<A> {
  */
 export interface ActionFail {
   type: ActionResultType.Fail;
+  value: undefined;
   location: SourceLocation;
   furthest: SourceLocation;
   expected: string[];

@@ -61,6 +61,7 @@ export function success<A>(context: Context, value: A): ActionResult<A> {
 export function failure<A>(context: Context, expected: string[]): ActionResult<A> {
     return {
         type: ActionResultType.Fail,
+        value: undefined,
         furthest: context.location,
         location: context.location,
         expected,
