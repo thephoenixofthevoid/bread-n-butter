@@ -3,29 +3,29 @@ import { snapTest } from "./util";
 import * as bnb from "../src/bread-n-butter";
 
 
+const { match: R, all: S, lazy: L, choice: C } = bnb
 
 namespace VCF {
+    const join = array => Object.assign({}, ...array)
+    const lineEnd = C("\n", bnb.eof)
+    const TValue: bnb.Parser<any> = L(() => C(TString, TObject, TBare, TSymbol, TDigit))
 
+    const TSymbol   = R(/[a-zA-Z_][a-zA-Z0-9_]+/)
+    const TBare     = R(/[^,;<>"=\n#]+/)
+    const TBareLong = R(/[^<>"\n#]+/)
+    const TDigit    = R(/[0-9.N]+/)
+    const TString   = R(/"((?:\\.|.)*?)"/)
+    const TPair     = S(TSymbol, "=", TValue).map(([K, _, V]) => ({ [K]: V }))
 
-    const TValue: bnb.Parser<any> = bnb.lazy(() => bnb.choice(TString, TObject, TBare, TSymbol, TDigit))
-
-    const TSymbol   = bnb.match(/[a-zA-Z_][a-zA-Z0-9_]+/)
-    const TBare     = bnb.match(/[^,;<>"=\n#]+/)
-    const TBareLong = bnb.match(/[^<>"\n#]+/)
-    const TDigit    = bnb.match(/[0-9.N]+/)
-    const TString   = bnb.match(/"((?:\\.|.)*?)"/)
-    const TPair     = bnb.all(TSymbol, "=", TValue).map(([K, _, V]) => ({ [K]: V }))
-
-    const TObject = TPair.sepBy(",").map(array => Object.assign({}, ...array))
+    const TObject = TPair.sepBy(",").map(join)
                          .sepBy(";").wrap("<", ">")
 
+    
 
-    const lineEnd = bnb.choice("\n", bnb.eof)
-
-    const TMetaLine = bnb.choice(
-        bnb.all(TSymbol, "=", TObject  ).map(([K, _, V]) => ({ [K]: V })).wrap("##", lineEnd),
-        bnb.all(TSymbol, "=", TBareLong).map(([K, _, V]) => ({ [K]: V })).wrap("##", lineEnd)
-    );
+    const TMetaLine = C(
+        S("##", TSymbol, "=", TObject  , lineEnd),
+        S("##", TSymbol, "=", TBareLong, lineEnd),
+    ).map(([_, K, __, V]) => ({ [K]: V }));
 
     export const Header = TMetaLine.repeat()
 }

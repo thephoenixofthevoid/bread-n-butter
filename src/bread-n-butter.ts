@@ -242,9 +242,13 @@ function validateInfiniteLoop<A>(context: Context, result: ActionResult<A>) {
 }
 
 function isRangeValid(min: number, max: number): boolean {
-  return (min <= max && min >= 0 && max >= 0 && 
-    Number.isInteger(min) && min !== Infinity &&
-     (Number.isInteger(max) || max === Infinity)
+  return (
+    min <= max &&
+    min >= 0 &&
+    max >= 0 &&
+    Number.isInteger(min) &&
+    min !== Infinity &&
+    (Number.isInteger(max) || max === Infinity)
   );
 }
 
