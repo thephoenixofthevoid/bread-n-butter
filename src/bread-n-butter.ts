@@ -174,7 +174,7 @@ export class Parser<A> {
       if (result.type === ActionResultType.Fail && items.length < min) {
         return result;
       }
-      return merge(result, context.ok(context.location.index, items));
+      return merge(result, context.ok(items));
     });
   }
 
@@ -208,10 +208,9 @@ export class Parser<A> {
    * Returns a parser that adds name and start/end location metadata.
    */
   node<S extends string>(name: S): Parser<ParseNode<S, A>> {
-    return all(location, this, location).map(([start, value, end]) => {
-      const type = ResultTypeEnum.Node;
-      return { type, name, value, start, end } as const;
-    });
+    return all(location, this, location).map(([start, value, end]) => ({
+      type: ResultTypeEnum.Node, name, value, start, end 
+    }))
   }
 }
 
@@ -231,25 +230,21 @@ function isRangeValid(min: number, max: number): boolean {
  * `index`, `line` and `column`.
  */
 export const location = new Parser<SourceLocation>((context) => {
-  return context.ok(context.location.index, context.location);
+  return context.ok(context.location);
 });
 
 /**
  * Returns a parser that yields the given value and consumes no input.
  */
 export function ok<A>(value: A): Parser<A> {
-  return new Parser((context) => {
-    return context.ok(context.location.index, value);
-  });
+  return new Parser(context => context.ok(value));
 }
 
 /**
  * Returns a parser that fails with the given messages and consumes no input.
  */
 export function fail<A>(expected: string[]): Parser<A> {
-  return new Parser((context) => {
-    return context.fail(context.location.index, expected);
-  });
+  return new Parser(context => context.fail(expected));
 }
 
 /**
@@ -257,11 +252,10 @@ export function fail<A>(expected: string[]): Parser<A> {
  */
 export const eof = new Parser<"<EOF>">((context) => {
   if (context.location.index < context.input.length) {
-    return context.fail(context.location.index, ["<EOF>"]);
+    return context.fail(["<EOF>"]);
   } else {
-    return context.ok(context.location.index, "<EOF>");
+    return context.ok("<EOF>");
   }
-
 });
 
 /** Returns a parser that matches the exact text supplied. */
@@ -271,9 +265,9 @@ export function text<A extends string>(string: A): Parser<A> {
     const end = start + string.length;
 
     if (context.input.slice(start, end) === string) {
-      return context.ok(end, string);
+      return context.at(end).ok(string);
     } else {
-      return context.fail(start, [string]);
+      return context.fail([string]);
     }
 
   });
@@ -303,9 +297,10 @@ export function match(regexp: RegExp): Parser<string> {
     if (match) {
       const end = start + match[0].length;
       const string = context.input.slice(start, end);
-      return context.ok(end, string);
+      context = context.at(end)
+      return context.ok(string);
     }
-    return context.fail(start, [String(regexp)]);
+    return context.fail([String(regexp)]);
   });
 }
 
@@ -330,7 +325,7 @@ export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
     }
 
     const values = reports.map(result => result.value)
-    const report = context.ok(context.location.index, values)
+    const report = context.ok(values)
     return mergeAll(...reports, report);
   });
 }
@@ -357,11 +352,6 @@ export function choice<Parsers extends Parser<any>[]>(...parsers: Parsers): Pars
  * recursive parsers.
  */
 export function lazy<A>(fn: () => Parser<A>): Parser<A> {
-  // NOTE: This parsing action overwrites itself on the specified parser. We're
-  // assuming that the same parser won't be returned to multiple `lazy` calls. I
-  // never heard of such a thing happening in Parsimmon, and it doesn't seem
-  // likely to happen here either. I assume this is faster than using variable
-  // closure and an `if`-statement here, but I honestly don't know.
   return new Parser(function (this: Parser<A>, context) {
     this.action = fn().action;
     return this.action(context);
@@ -406,15 +396,20 @@ class Context {
     return { index, line, column };
   }
 
+  at(index: number) {
+    const location = this._internal_move(index)
+    return this.moveTo(location)
+  }
+
   /**
    * Represents a successful parse ending before the given `index`, with the
    * specified `value`.
    */
-  ok<A>(index: number, value: A): ActionResult<A> {
+  ok<A>(value: A): ActionResult<A> {
     return {
       type: ActionResultType.OK,
       value,
-      location: this._internal_move(index),
+      location: this.location,
       furthest: { index: -1, line: -1, column: -1 },
       expected: [],
     };
@@ -424,10 +419,10 @@ class Context {
    * Represents a failed parse starting at the given `index`, with the specified
    * list `expected` messages (note: this list usually only has one item).
    */
-  fail<A>(index: number, expected: string[]): ActionResult<A> {
+  fail<A>(expected: string[]): ActionResult<A> {
     return {
       type: ActionResultType.Fail,
-      furthest: this._internal_move(index),
+      furthest: this.location,
       expected,
     };
   }
