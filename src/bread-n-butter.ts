@@ -1,4 +1,4 @@
-import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK } from "./interfaces";
+import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK, ActionFail } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
 export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } 
 
@@ -45,12 +45,10 @@ export class Parser<A> {
     if (result.type === ResultTypeEnum.OK) {
       return result.value;
     }
-    const { expected, location } = result;
-    const { line, column } = location;
-    const message =
-      `parse error at line ${line} column ${column}: ` +
-      `expected ${expected.join(", ")}`;
-    throw new Error(message);
+
+    throw new Error(`parse error at line ${result.location.line} ` +
+                                 `column ${result.location.column}: ` +
+                               `expected ${result.expected.join(", ")}`);
   }
 
   /**
@@ -58,37 +56,17 @@ export class Parser<A> {
    * an array.
    */
   and<B>(parserB: Parser<B>): Parser<[A, B]> {
-    return new Parser((context) => {
-      //---------------------------------------
-      const a = this.action(context);
-      if (a.type === ActionResultType.Fail) {
-        return mergeAll(a);
-      }
-      context = context.moveTo(a.location);
-      //---------------------------------------
-
-      //---------------------------------------
-      const b = parserB.action(context)
-      if (b.type === ActionResultType.Fail) {
-        return mergeAll(a, b);
-      }
-      context = context.moveTo(b.location);
-      //---------------------------------------
-
-      const value: [A, B] = [a.value, b.value];
-      const c = context.ok(b.location.index, value)
-      return mergeAll(a, b, c);
-    });
+    return all<[A, B]>(this, parserB)
   }
 
   /** Parse both and return the value of the first */
   skip<B>(parserB: Parser<B>): Parser<A> {
-    return this.and(parserB).map(([a]) => a);
+    return all<[A, B]>(this, parserB).map(([a]) => a);
   }
 
   /** Parse both and return the value of the second */
   next<B>(parserB: Parser<B>): Parser<B> {
-    return this.and(parserB).map(([, b]) => b);
+    return all<[A, B]>(this, parserB).map(([, b]) => b);
   }
 
   /**
@@ -96,16 +74,7 @@ export class Parser<A> {
    * second parser.
    */
   or<B>(parserB: Parser<B>): Parser<A | B> {
-    return new Parser<A | B>((context) => {
-
-      const a = this.action(context);
-      if (a.type === ActionResultType.OK) {
-        return a;
-      }
-
-      const b = parserB.action(context)
-      return merge(a, b);
-    });
+    return choice(this, parserB)
   }
 
   /**
@@ -361,20 +330,25 @@ export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
     }
 
     const values = reports.map(result => result.value)
-    const last = context.ok(context.location.index, values)
-    return mergeAll(...reports, last);
+    const report = context.ok(context.location.index, values)
+    return mergeAll(...reports, report);
   });
 }
 
 /** Parse using the parsers given, returning the first one that succeeds. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function choice<Parsers extends Parser<any>[]>(
-  ...parsers: Parsers
-): Parser<ReturnType<Parsers[number]["tryParse"]>> {
-  // TODO: This could be optimized with a custom parser, but I should probably add
-  // benchmarking first to see if it really matters enough to rewrite it
-  return parsers.reduce((acc, p) => {
-    return acc.or(p);
+export function choice<Parsers extends Parser<any>[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
+  return new Parser((context) => {
+    var reports: ActionFail[] = []
+  
+    for (let parser of parsers) {
+        const report = parser.action(context);
+        if (report.type === ActionResultType.OK) 
+          return mergeAll(...reports, report)
+        reports.push(report);
+    }
+
+    return mergeAll(...reports);
   });
 }
 
@@ -388,11 +362,10 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
   // never heard of such a thing happening in Parsimmon, and it doesn't seem
   // likely to happen here either. I assume this is faster than using variable
   // closure and an `if`-statement here, but I honestly don't know.
-  const parser: Parser<A> = new Parser((context) => {
-    parser.action = fn().action;
-    return parser.action(context);
+  return new Parser(function (this: Parser<A>, context) {
+    this.action = fn().action;
+    return this.action(context);
   });
-  return parser;
 }
 
 
