@@ -272,6 +272,18 @@ test("wrap", () => {
   snapTest(p, "x>");
 });
 
+test("lookahead", () => {
+  const p = bnb.all(
+    bnb.text("<"),
+    bnb.lookahead(bnb.text(">")),
+    bnb.match(/[>]*[a-zA-Z_-]+/).or(bnb.match(/[a-zA-Z_-]*/)),
+    bnb.text(">>"),
+  )
+  snapTest(p, "<>>");
+  snapTest(p, "<hi>>");
+  snapTest(p, "<>hi>>");
+});
+
 test("trim", () => {
   const p = bnb.text("x").trim(bnb.text("~"));
   snapTest(p, "~x~");

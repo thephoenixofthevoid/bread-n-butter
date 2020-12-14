@@ -382,6 +382,44 @@ Object {
 }
 `;
 
+exports[`lookahead: "<>>" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    "<",
+    ">",
+    "",
+    ">>",
+  ],
+}
+`;
+
+exports[`lookahead: "<>hi>>" 1`] = `
+Object {
+  "type": "ParseOK",
+  "value": Array [
+    "<",
+    ">",
+    ">hi",
+    ">>",
+  ],
+}
+`;
+
+exports[`lookahead: "<hi>>" 1`] = `
+Object {
+  "expected": Array [
+    ">",
+  ],
+  "location": Object {
+    "column": 2,
+    "index": 1,
+    "line": 1,
+  },
+  "type": "ParseFail",
+}
+`;
+
 exports[`match: "12" 1`] = `
 Object {
   "type": "ParseOK",

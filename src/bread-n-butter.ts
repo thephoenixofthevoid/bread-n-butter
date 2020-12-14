@@ -113,6 +113,19 @@ export class Parser<A> {
     })
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   /**
    * Returns the callback called with the parser.
    */
@@ -215,7 +228,7 @@ export class Parser<A> {
   }
 
   /**
-   * Returns a parser that adds name and start/end location metadata.
+   * Returns a parser that adds name and start/end location metadatb
    */
   node<S extends string>(name: S) {
     return seqMap<[SourceLocation, A, SourceLocation], ParseNode<S, A>>([location, this, location], ([start, value, end]) => ({
@@ -300,6 +313,17 @@ export function text<A extends string>(string: A): Parser<A> {
     }
 
   });
+}
+
+
+export function lookahead<B>(parser: Parser<B>) {
+  return new Parser(function (context) {
+    const a = parser.action(context)
+    if (a.type !== ActionResultType.OK) {
+      return a
+    }
+    return merge(a, context.ok(a.value))
+  })
 }
 
 /**
