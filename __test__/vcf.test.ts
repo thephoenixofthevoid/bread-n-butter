@@ -6,7 +6,7 @@ const { match: R, all: S, lazy: L, choice: C } = bnb
 
 
 namespace VCF {
-    const join = array => Object.assign({}, ...array)
+    const join = (array: any[]) => Object.assign({}, ...array)
     const lineEnd = C("\n", bnb.eof)
     const TValue: bnb.Parser<any> = L(() => C(TString, TObject, TBare, TSymbol, TDigit))
 

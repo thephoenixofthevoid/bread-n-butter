@@ -1,3 +1,4 @@
+import { Context, failure, merge, success } from "./Context";
 import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK, ActionFail } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
 export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult }
@@ -191,7 +192,7 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
   const pairParser = sepParser.next(itemParser)
 
   return new Parser(function (context) {
-    var report: ActionResult<A> = context.fail([]) as ActionFail;
+    var report: ActionResult<A> = failure(context, []) as ActionFail;
     var values: A[] = [];
 
     while (values.length < max) {
@@ -205,9 +206,9 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
       values.push(report.value)
     }
     if (values.length < min) {
-      return merge(report, context.fail([]))
+      return merge(report, failure(context, []))
     } else {
-      return merge(report, context.ok(values))
+      return merge(report, success(context, values))
     }
   })
 }
@@ -217,7 +218,7 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
 export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
   return new Parser(function (context) {
 
-    var report: ActionResult<A> = context.fail([]) as ActionFail;
+    var report: ActionResult<A> = failure(context, []) as ActionFail;
     var values: A[] = [];
 
     while (values.length < max) {
@@ -229,9 +230,9 @@ export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Pars
     }
 
     if (values.length < min) {
-      return merge(report, context.fail([]))
+      return merge(report, failure(context, []))
     } else {
-      return merge(report, context.ok(values))
+      return merge(report, success(context, values))
     }
   })
 }
@@ -260,21 +261,21 @@ function isRangeValid(min: number, max: number): boolean {
  * `index`, `line` and `column`.
  */
 export const location = new Parser<SourceLocation>((context) => {
-  return context.ok(context.location);
+  return success(context, context.location);
 });
 
 /**
  * Returns a parser that yields the given value and consumes no input.
  */
 export function ok<A>(value: A): Parser<A> {
-  return new Parser(context => context.ok(value));
+  return new Parser(context => success(context, value));
 }
 
 /**
  * Returns a parser that fails with the given messages and consumes no input.
  */
 export function fail<A>(expected: string[]): Parser<A> {
-  return new Parser(context => context.fail(expected));
+  return new Parser(context => failure(context, expected));
 }
 
 /**
@@ -282,9 +283,9 @@ export function fail<A>(expected: string[]): Parser<A> {
  */
 export const eof = new Parser<"<EOF>">((context) => {
   if (context.location.index < context.input.length) {
-    return context.fail(["<EOF>"]);
+    return failure(context, ["<EOF>"]);
   } else {
-    return context.ok("<EOF>");
+    return success(context, "<EOF>");
   }
 });
 
@@ -295,9 +296,9 @@ export function text<A extends string>(string: A): Parser<A> {
     const end = start + string.length;
 
     if (context.input.slice(start, end) === string) {
-      return context.moveTo(end).ok(string);
+      return success(context.moveTo(end), string);
     } else {
-      return context.fail([string]);
+      return failure(context, [string]);
     }
 
   });
@@ -310,7 +311,7 @@ export function lookahead<B>(parser: Parser<B>) {
     if (a.type !== ActionResultType.OK) {
       return a
     }
-    return merge(a, context.ok(a.value))
+    return merge(a, success(context, a.value))
   })
 }
 
@@ -318,10 +319,10 @@ export function notFollowing<B>(parser: Parser<B>) {
   return new Parser(function (context) {
     const a = parser.action(context)
     if (a.type === ActionResultType.OK) {
-      const b = context.fail<null>([`not '${a.value}'`])
+      const b = failure<null>(context, [`not '${a.value}'`])
       return merge(a, b)
     }
-    return merge(a, context.ok(null))
+    return merge(a, success(context, null))
   })
 }
 
@@ -350,9 +351,9 @@ export function match(regexp: RegExp): Parser<string> {
       const end = start + match[0].length;
       const string = context.input.slice(start, end);
       context = context.moveTo(end)
-      return context.ok(string);
+      return success(context, string);
     }
-    return context.fail([String(regexp)]);
+    return failure(context, [String(regexp)]);
   });
 }
 
@@ -393,7 +394,7 @@ export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
       values[i] = report.value
     }
 
-    const report = context.ok(values)
+    const report = success(context, values)
     return mergeAll(...reports, report);
   });
 }
@@ -428,89 +429,6 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
   });
 }
 
-
-/**
- * Represents the current parsing context.
- */
-class Context {
-
-  constructor(public input: string, public location: SourceLocation) { }
-
-  /**
-   * Returns a new context with the supplied location and the current input.
-   */
-  moveTo(location: SourceLocation | number): Context {
-    if (typeof location === "number") {
-      return new Context(this.input, this._internal_move(location));
-    } else {
-      return new Context(this.input, location);
-    }
-  }
-
-  private _internal_move(newIndex: number): SourceLocation {
-    var { index, line, column } = this.location;
-
-    while (index < newIndex) {
-      const ch = this.input[index++]
-      column++;
-      if (ch === "\n") {
-        line++;
-        column = 1;
-      }
-    }
-
-    return { index, line, column };
-  }
-
-  /**
-   * Represents a successful parse ending before the given `index`, with the
-   * specified `value`.
-   */
-  ok<A>(value: A): ActionResult<A> {
-    return {
-      type: ActionResultType.OK,
-      value,
-      location: this.location,
-      furthest: { index: -1, line: -1, column: -1 },
-      expected: [],
-    };
-  }
-
-  /**
-   * Represents a failed parse starting at the given `index`, with the specified
-   * list `expected` messages (note: this list usually only has one item).
-   */
-  fail<A>(expected: string[]): ActionResult<A> {
-    return {
-      type: ActionResultType.Fail,
-      furthest: this.location,
-      location: this.location,
-      expected,
-    };
-  }
-
-
-}
-
 function mergeAll(...rest: ActionResult<any>[]): ActionResult<any> {
   return rest.reduce(merge)
-}
-
-/**
-* Merge two sequential `ActionResult`s so that the `expected` and location data
-* is preserved correctly.
-*/
-function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
-  if (a.furthest.index > b.furthest.index) return {
-    ...b, expected: a.expected, furthest: a.furthest
-  };
-
-  if (a.furthest.index < b.furthest.index) return {
-    ...b, expected: b.expected, furthest: b.furthest
-  };
-
-  const expected = [...new Set([...a.expected, ...b.expected])]
-  return {
-    ...b, expected: expected, furthest: a.furthest
-  };
 }
