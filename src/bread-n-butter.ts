@@ -1,4 +1,4 @@
-import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } from "./interfaces";
+import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
 export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } 
 
@@ -59,17 +59,25 @@ export class Parser<A> {
    */
   and<B>(parserB: Parser<B>): Parser<[A, B]> {
     return new Parser((context) => {
+      //---------------------------------------
       const a = this.action(context);
       if (a.type === ActionResultType.Fail) {
-        return a;
+        return mergeAll(a);
       }
       context = context.moveTo(a.location);
-      const b = merge(a, parserB.action(context));
-      if (b.type === ActionResultType.OK) {
-        const value: [A, B] = [a.value, b.value];
-        return merge(b, context.ok(b.location.index, value));
+      //---------------------------------------
+
+      //---------------------------------------
+      const b = parserB.action(context)
+      if (b.type === ActionResultType.Fail) {
+        return mergeAll(a, b);
       }
-      return b;
+      context = context.moveTo(b.location);
+      //---------------------------------------
+
+      const value: [A, B] = [a.value, b.value];
+      const c = context.ok(b.location.index, value)
+      return mergeAll(a, b, c);
     });
   }
 
@@ -89,11 +97,14 @@ export class Parser<A> {
    */
   or<B>(parserB: Parser<B>): Parser<A | B> {
     return new Parser<A | B>((context) => {
+
       const a = this.action(context);
       if (a.type === ActionResultType.OK) {
         return a;
       }
-      return merge(a, parserB.action(context));
+
+      const b = parserB.action(context)
+      return merge(a, b);
     });
   }
 
@@ -107,9 +118,11 @@ export class Parser<A> {
       if (a.type === ActionResultType.Fail) {
         return a;
       }
-      const parserB = fn(a.value);
       context = context.moveTo(a.location);
-      return merge(a, parserB.action(context));
+
+      const parserB = fn(a.value);
+      const b = parserB.action(context)
+      return merge(a, b);
     });
   }
 
@@ -336,15 +349,21 @@ type ManyParsers<A extends any[]> = {
 /** Parse all items, returning their values in the same order. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
-  // TODO: This could be optimized with a custom parser, but I should probably add
-  // benchmarking first to see if it really matters enough to rewrite it
-  return parsers.reduce((acc, p) => {
-    return acc.chain((array) => {
-      return p.map((value) => {
-        return [...array, value];
-      });
-    });
-  }, ok([]));
+  return new Parser((context) => {
+    var reports: ActionOK<A>[] = []
+  
+    for (let parser of parsers) {
+        const report = parser.action(context);
+        if (report.type === ActionResultType.Fail) 
+          return mergeAll(...reports, report)
+        reports.push(report);
+        context = context.moveTo(report.location);
+    }
+
+    const values = reports.map(result => result.value)
+    const last = context.ok(context.location.index, values)
+    return mergeAll(...reports, last);
+  });
 }
 
 /** Parse using the parsers given, returning the first one that succeeds. */
@@ -442,6 +461,12 @@ class Context {
 
 
 }
+
+function mergeAll(...rest: ActionResult<any>[]): ActionResult<any> {
+  return rest.reduce(merge)
+}
+
+
 
 /**
 * Merge two sequential `ActionResult`s so that the `expected` and location data
