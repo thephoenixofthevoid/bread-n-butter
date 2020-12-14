@@ -1,6 +1,6 @@
 import { ActionResultType, SourceLocation } from "./interfaces";
 
-export interface ActionResultValue<V> {
+interface ActionResultValue<V> {
     type: ActionResultType.OK;
     value: V;
     location: SourceLocation;
@@ -8,14 +8,14 @@ export interface ActionResultValue<V> {
     expected: string[];
 }
 
-export interface ActionResultFailure {
+interface ActionResultFailure {
     type: ActionResultType.Fail;
     location: SourceLocation;
     furthest: SourceLocation;
     expected: string[];
 }
 
-export type ActionData<V> = ActionResultValue<V>|ActionResultFailure;
+type ActionData<V> = ActionResultValue<V>|ActionResultFailure;
 
 export class ActionResult<A> {
     
@@ -53,7 +53,7 @@ export class ActionResult<A> {
 }
 
 
-export function merge<A, B>(a: ActionData<A>, b: ActionData<B>): ActionData<B> {
+function merge<A, B>(a: ActionData<A>, b: ActionData<B>): ActionData<B> {
     if (a.furthest.index > b.furthest.index) return {
         ...b, expected: a.expected, furthest: a.furthest
     };

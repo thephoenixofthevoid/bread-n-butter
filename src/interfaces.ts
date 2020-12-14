@@ -32,38 +32,6 @@ export const enum ResultTypeEnum {
 
 
 /**
- * Represents the result of a parser's action callback.
- */
-export type ActionResult<A> = ActionOK<A> | ActionFail;
-
-/**
- * Represents a successful result from a parser's action callback. This is made
- * automatically by calling `context.ok`. Make sure to use `context.merge`
- * when writing a custom parser that executes multiple parser actions.
- */
-export interface ActionOK<A> {
-  type: ActionResultType.OK;
-  location: SourceLocation;
-  value: A;
-  furthest: SourceLocation;
-  expected: string[];
-}
-
-/**
- * Represents a successful result from a parser's action callback. This is made
- * automatically by calling `context.ok`. Make sure to use `context.merge`
- * when writing a custom parser that executes multiple parser actions.
- */
-export interface ActionFail {
-  type: ActionResultType.Fail;
-  value: undefined;
-  location: SourceLocation;
-  furthest: SourceLocation;
-  expected: string[];
-}
-
-
-/**
  * Represents a successful parse result.
  */
 export interface ParseOK<A> {

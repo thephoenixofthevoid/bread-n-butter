@@ -330,7 +330,7 @@ test("lazy", () => {
   type Expr = Item | List;
   type Item = "x";
   type List = Expr[];
-  const expr: bnb.Parser<Expr> = bnb.lazy(() => {
+  const expr: any = bnb.lazy(() => {
     return item.or(list);
   });
   const item = bnb.text("x");

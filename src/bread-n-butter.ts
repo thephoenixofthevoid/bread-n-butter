@@ -1,184 +1,9 @@
 import { ActionResult } from "./ActionResult";
 import { Context, failure, success } from "./Context";
-import type { ParseOK, ParseFail, ParseNode, SourceLocation, } from "./interfaces";
-import { ResultTypeEnum, ActionResultType } from "./interfaces";
-export { ParseOK, ParseFail, ParseNode, SourceLocation }
-
-/**
- * The parsing action. Takes a parsing Context and returns an ActionResult
- * representing success or failure.
- */
-export type ParsingAction<A> = (context: Context) => ActionResult<A>
-
-/**
- * Represents a parsing action; typically not created directly via `new`.
- */
-export class Parser<A> {
-  /**
-   * Creates a new custom parser that performs the given parsing action.
-   */
-  constructor(public action: ParsingAction<A>) { }
-
-  /**
-   * Returns a parse result with either the value or error information.
-   */
-  parse(input: string): ParseOK<A> | ParseFail {
-    const location = { index: 0, line: 1, column: 1 };
-    const context = new Context(input, location);
-    const result = this.skip(eof).action(context);
-    if (result.type === ActionResultType.OK) {
-      return {
-        type: ResultTypeEnum.OK,
-        value: result.value!,
-      };
-    }
-    return {
-      type: ResultTypeEnum.Fail,
-      location: result.furthest,
-      expected: result.expected,
-    };
-  }
-
-  /**
-   * Returns the parsed result or throws an error.
-   */
-  tryParse(input: string): A {
-    const result = this.parse(input);
-    if (result.type === ResultTypeEnum.OK) {
-      return result.value;
-    }
-
-    throw new Error(`parse error at line ${result.location.line} ` +
-      `column ${result.location.column}: ` +
-      `expected ${result.expected.join(", ")}`);
-  }
-
-  /**
-   * Combines two parsers one after the other, yielding the results of both in
-   * an array.
-   */
-  and<B>(parserB: Parser<B>): Parser<[A, B]> {
-    return all<[A, B]>(this, parserB)
-  }
-
-  /** Parse both and return the value of the first */
-  skip<B>(parserB: Parser<B>): Parser<A> {
-    return all<[A, B]>(this, parserB).map(([a]) => a);
-  }
-
-  /** Parse both and return the value of the second */
-  next<B>(parserB: Parser<B>): Parser<B> {
-    return all<[A, B]>(this, parserB).map(([, b]) => b);
-  }
-
-  /**
-   * Try to parse using the current parser. If that fails, parse using the
-   * second parser.
-   */
-  or<B>(parserB: Parser<B>): Parser<A | B> {
-    return choice(this, parserB)
-  }
-
-  /**
-   * Parse using the current parser. If it succeeds, pass the value to the
-   * callback function, which returns the next parser to use.
-   */
-  chain<B>(fn: (value: A) => Parser<B>): Parser<B> {
-    return new Parser((context) => {
-      const a = this.action(context);
-      if (a.type !== ActionResultType.OK) {
-        return a as unknown as ActionResult<B>;
-      }
-      context = context.moveTo(a.location);
-
-      const parserB = fn(a.value!);
-      const b = parserB.action(context)
-      return a.update(b)
-    });
-  }
-
-  /**
-   * Yields the value from the parser after being called with the callback.
-   */
-  map<B>(fn: (value: A) => B): Parser<B> {
-    const parent = this;
-    return new Parser(function (context) {
-      const report = parent.action(context)
-      return report.transform<B>(fn)
-    })
-  }
-
-  /**
-   * Returns the callback called with the parser.
-   */
-  thru<B>(fn: (parser: this) => B): B {
-    return fn(this);
-  }
-
-  /**
-   * Returns a parser which parses the same value, but discards other error
-   * messages, using the ones supplied instead.
-   */
-  desc(expected: string[]): Parser<A> {
-    return new Parser((context) => {
-      const result = this.action(context);
-      if (result.type === ActionResultType.OK) {
-        return result;
-      }
-      return new ActionResult({
-        type: ActionResultType.Fail,
-        furthest: result.furthest,
-        location: context.location,
-        expected: expected
-      })
-    });
-  }
-
-  /**
-   * Wraps the current parser with before & after parsers.
-   */
-  wrap<B = string, C = string>(before: Parser<B> | string, after: Parser<C> | string): Parser<A> {
-    return toParser(before).next(this).skip(toParser(after));
-  }
-
-  /**
-   * Ignores content before and after the current parser, based on the supplied
-   * parser.
-   */
-  trim<B = string>(beforeAndAfter: Parser<B> | string): Parser<A> {
-    return this.wrap(toParser(beforeAndAfter), toParser(beforeAndAfter));
-  }
-
-  /**
-   * Repeats the current parser between min and max times, yielding the results
-   * in an array.
-   */
-  repeat(min = 0, max = Infinity): Parser<A[]> {
-    if (!isRangeValid(min, max)) throw new Error(`repeat: bad range (${min} to ${max})`);
-    return Repeat(this, min, max);
-  }
-
-  /**
-   * Returns a parser that parses between min and max times, separated by the separator
-   * parser supplied.
-   */
-  sepBy<B = string>(separator: Parser<B> | string, min = 0, max = Infinity): Parser<A[]> {
-    if (!isRangeValid(min, max)) throw new Error(`sepBy: bad range (${min} to ${max})`);
-    return Separated(this, toParser(separator), min, max)
-  }
-
-  /**
-   * Returns a parser that adds name and start/end location metadatb
-   */
-  node<S extends string>(name: S) {
-    return all(location, this, location)
-          .map(function ([start, value, end]) {
-            const type = ResultTypeEnum.Node
-            return { type, name, value, start, end }
-          })
-  }
-}
-
+import type { ParseNode, SourceLocation, } from "./interfaces";
+import { ActionResultType } from "./interfaces";
+import { Parser } from "./Parser";
+export { ParseNode, SourceLocation }
 
 export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min: number, max: number): Parser<A[]> {
   itemParser = toParser(itemParser)
@@ -240,7 +65,7 @@ function validateInfiniteLoop<A>(context: Context, result: ActionResult<A>) {
   }
 }
 
-function isRangeValid(min: number, max: number): boolean {
+export function isRangeValid(min: number, max: number): boolean {
   return (
     min <= max &&
     min >= 0 &&
@@ -295,7 +120,6 @@ export function text<A extends string>(string: A): Parser<A> {
     } else {
       return failure(context, [string]);
     }
-
   });
 }
 
@@ -359,13 +183,9 @@ type ManyParsers<A extends any[]> = {
 };
 
 
-function toParser(parser: string | RegExp | Parser<any>) {
-  if (typeof parser === "string") {
-    return text(parser)
-  }
-  if (parser instanceof RegExp) {
-    return match(parser)
-  }
+export function toParser(parser: string | RegExp | Parser<any>) {
+  if (typeof parser === "string") return text(parser)
+  if (parser instanceof RegExp) return match(parser)
   return parser
 }
 
