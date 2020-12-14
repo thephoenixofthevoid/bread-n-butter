@@ -2,7 +2,11 @@ import { ActionResult } from "./ActionResult";
 import { Context } from "./Context";
 import { ParseOK, ParseFail } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
-import { eof, all, choice, toParser, isRangeValid, Repeat, Separated, location } from "./bread-n-butter";
+import { eof, toParser, isRangeValid, location } from "./bread-n-butter";
+import { choice } from "./choice";
+import { all } from "./all";
+import { Separated } from "./Separated";
+import { Repeat } from "./Repeat";
 
 export class Parser<A> {
 

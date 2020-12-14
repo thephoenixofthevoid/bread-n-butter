@@ -3,61 +3,13 @@ import { Context, failure, success } from "./Context";
 import type { ParseNode, SourceLocation, } from "./interfaces";
 import { ActionResultType } from "./interfaces";
 import { Parser } from "./Parser";
-export { ParseNode, SourceLocation }
+import { all } from "./all";
+import { choice } from "./choice";
 
-export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min: number, max: number): Parser<A[]> {
-  itemParser = toParser(itemParser)
-  sepParser = toParser(sepParser)
-  const pairParser = sepParser.next(itemParser)
+export { ParseNode, SourceLocation, all, choice }
+export type { Parser } from "./Parser";
 
-  return new Parser(function (context) {
-    var report = failure<any>(context, [])
-    var values: A[] = [];
-
-    while (values.length < max) {
-      if (values.length > 0) {
-        report = report.update(pairParser.action(context))
-      } else {
-        report = report.update(itemParser.action(context))
-      }
-      if (report.type !== ActionResultType.OK) break;
-      context = context.moveTo(report.location)
-      values.push(report.value)
-    }
-    if (values.length < min) {
-      return report.update(failure(context, []))
-    } else {
-      return report.update(success(context, values))
-    }
-  })
-}
-
-
-
-export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
-  return new Parser(function (context) {
-
-    var report = failure<any>(context, [])
-    var values: A[] = [];
-
-    while (values.length < max) {
-      const temp = itemParser.action(context)
-      report = report.update(temp)
-      if (report.type !== ActionResultType.OK) break;
-      validateInfiniteLoop(context, report);
-      context = context.moveTo(report.location)
-      values.push(report.value)
-    }
-
-    if (values.length < min) {
-      return report.update(failure(context, []))
-    } else {
-      return report.update(success(context, values))
-    }
-  })
-}
-
-function validateInfiniteLoop<A>(context: Context, result: ActionResult<A>) {
+export function validateInfiniteLoop<A>(context: Context, result: ActionResult<A>) {
   if (result.location.index === context.location.index) {
     throw new Error(
       "infinite loop detected; don't call .repeat() with parsers that can accept zero characters"
@@ -178,7 +130,7 @@ export function match(regexp: RegExp): Parser<string> {
 
 /** A tuple of parsers */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ManyParsers<A extends any[]> = {
+export type ManyParsers<A extends any[]> = {
   [P in keyof A]: Parser<A[P]> | A[P];
 };
 
@@ -189,53 +141,6 @@ export function toParser(parser: string | RegExp | Parser<any>) {
   return parser
 }
 
-
-/** Parse all items, returning their values in the same order. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
-  parsers = parsers.map(toParser) as ManyParsers<A>;
-  return new Parser((context) => {
-    var report = failure<any>(context, [])
-    const values = new Array(parsers.length) as A;
-
-    for (let i = 0; i < parsers.length; i++) {
-      const parser: ManyParsers<A>[typeof i] = parsers[i];
-      const next = parser.action(context);
-
-      context = context.moveTo(next.location);
-      report = report.update(next)
-
-      if (next.type === ActionResultType.OK) {
-        values[i] = next.value
-      } else {
-        return report
-      }
-    }
-
-    return report.update(success(context, values))
-  });
-}
-
-/** Parse using the parsers given, returning the first one that succeeds. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function choice<Parsers extends (Parser<any> | any)[]>(...parsers: Parsers): Parser<ReturnType<Parsers[number]["tryParse"]>> {
-  parsers = parsers.map(toParser) as Parsers;
-
-  return new Parser((context) => {
-    var report = failure<any>(context, [])
-
-    for (let i = 0; i < parsers.length; i++) {
-      const parser = parsers[i];
-      const next = parser.action(context);
-      report = report.update(next)
-      if (next.type === ActionResultType.OK) {
-        break
-      }
-    }
-
-    return report
-  });
-}
 
 /**
  * Takes a lazily invoked callback that returns a parser, so you can create
