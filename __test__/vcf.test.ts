@@ -1,9 +1,9 @@
 
 import { snapTest } from "./util";
 import * as bnb from "../src/bread-n-butter";
-
-
 const { match: R, all: S, lazy: L, choice: C } = bnb
+
+
 
 namespace VCF {
     const join = array => Object.assign({}, ...array)

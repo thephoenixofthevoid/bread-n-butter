@@ -160,7 +160,7 @@ export class Parser<A> {
    */
   repeat(min = 0, max = Infinity): Parser<A[]> {
     if (!isRangeValid(min, max)) throw new Error(`repeat: bad range (${min} to ${max})`);
-    return Repeate(this, min, max);
+    return Repeat(this, min, max);
   }
 
   /**
@@ -186,7 +186,6 @@ export class Parser<A> {
 
 
 export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min: number, max: number): Parser<A[]> {
-
   itemParser = toParser(itemParser)
   sepParser = toParser(sepParser)
   const pairParser = sepParser.next(itemParser)
@@ -207,15 +206,17 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
     }
     if (values.length < min) {
       return merge(report, context.fail([]))
+    } else {
+      return merge(report, context.ok(values))
     }
-    return merge(report, context.ok(values))
   })
 }
 
 
 
-export function Repeate<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
+export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
   return new Parser(function (context) {
+
     var report: ActionResult<A> = context.fail([]) as ActionFail;
     var values: A[] = [];
 
@@ -226,10 +227,12 @@ export function Repeate<A>(itemParser: Parser<A>, min: number, max: number): Par
       context = context.moveTo(report.location)
       values.push(report.value)
     }
+
     if (values.length < min) {
       return merge(report, context.fail([]))
+    } else {
+      return merge(report, context.ok(values))
     }
-    return merge(report, context.ok(values))
   })
 }
 
