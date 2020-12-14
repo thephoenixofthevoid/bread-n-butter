@@ -17,14 +17,14 @@ export interface SourceLocation {
     column: number;
 }
 
-export enum ActionResultType {
+export const enum ActionResultType {
     Fail,
     OK,
 }
 
 
 // Eventually drop strings to get ints
-export enum ResultTypeEnum {
+export const enum ResultTypeEnum {
     Fail = "ParseFail",
     OK = "ParseOK",
     Node = "ParseNode",
