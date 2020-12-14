@@ -1,8 +1,11 @@
+import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } from "./interfaces";
+import { ParseResultType, ActionResultType } from "./interfaces";
+
 /**
  * The parsing action. Takes a parsing Context and returns an ActionResult
  * representing success or failure.
  */
-type ParsingAction<A> = (context: Context) => ActionResult<A>
+export type ParsingAction<A> = (context: Context) => ActionResult<A>
 
 /**
  * Represents a parsing action; typically not created directly via `new`.
@@ -22,12 +25,12 @@ export class Parser<A> {
     const result = this.skip(eof).action(context);
     if (result.type === "ActionOK") {
       return {
-        type: "ParseOK",
+        type: ParseResultType.OK,
         value: result.value,
       };
     }
     return {
-      type: "ParseFail",
+      type: ParseResultType.Fail,
       location: result.furthest,
       expected: result.expected,
     };
@@ -38,7 +41,7 @@ export class Parser<A> {
    */
   tryParse(input: string): A {
     const result = this.parse(input);
-    if (result.type === "ParseOK") {
+    if (result.type === ParseResultType.OK) {
       return result.value;
     }
     const { expected, location } = result;
@@ -135,7 +138,11 @@ export class Parser<A> {
       if (result.type === "ActionOK") {
         return result;
       }
-      return { type: "ActionFail", furthest: result.furthest, expected };
+      return {
+        type: ActionResultType.Fail,
+        furthest: result.furthest, 
+        expected 
+      };
     });
   }
 
@@ -219,7 +226,7 @@ export class Parser<A> {
    */
   node<S extends string>(name: S): Parser<ParseNode<S, A>> {
     return all(location, this, location).map(([start, value, end]) => {
-      const type = "ParseNode";
+      const type = ParseResultType.Node;
       return { type, name, value, start, end } as const;
     });
   }
@@ -234,17 +241,6 @@ function isRangeValid(min: number, max: number): boolean {
     min !== Infinity &&
     (Number.isInteger(max) || max === Infinity)
   );
-}
-
-/**
- * Result type from `node`. See `node` for more details.
- */
-export interface ParseNode<S extends string, A> {
-  type: "ParseNode";
-  name: S;
-  value: A;
-  start: SourceLocation;
-  end: SourceLocation;
 }
 
 /**
@@ -374,57 +370,11 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
   return parser;
 }
 
-/**
- * Represents a location in the input (source code). Keeps track of `index` (for
- * use with `.slice` and such), as well as `line` and `column` for displaying to
- * users.
- */
-export interface SourceLocation {
-  /** The string index into the input (e.g. for use with `.slice`) */
-  index: number;
-  /**
-   * The line number for error reporting. Only the character `\n` is used to
-   * signify the beginning of a new line.
-   */
-  line: number;
-  /**
-   * The column number for error reporting.
-   */
-  column: number;
-}
-
-/**
- * Represents the result of a parser's action callback.
- */
-export type ActionResult<A> = ActionOK<A> | ActionFail;
-
-/**
- * Represents a successful result from a parser's action callback. This is made
- * automatically by calling `context.ok`. Make sure to use `context.merge`
- * when writing a custom parser that executes multiple parser actions.
- */
-export interface ActionOK<A> {
-  type: "ActionOK";
-  location: SourceLocation;
-  value: A;
-  furthest: SourceLocation;
-  expected: string[];
-}
-
-/**
- * Represents a successful result from a parser's action callback. This is made
- * automatically by calling `context.ok`. Make sure to use `context.merge`
- * when writing a custom parser that executes multiple parser actions.
- */
-export interface ActionFail {
-  type: "ActionFail";
-  furthest: SourceLocation;
-  expected: string[];
-}
 
 function union(a: string[], b: string[]): string[] {
   return [...new Set([...a, ...b])];
 }
+
 
 /**
  * Represents the current parsing context.
@@ -468,7 +418,7 @@ class Context {
    */
   ok<A>(index: number, value: A): ActionResult<A> {
     return {
-      type: "ActionOK",
+      type: ActionResultType.OK,
       value,
       location: this._internal_move(index),
       furthest: { index: -1, line: -1, column: -1 },
@@ -482,7 +432,7 @@ class Context {
    */
   fail<A>(index: number, expected: string[]): ActionResult<A> {
     return {
-      type: "ActionFail",
+      type: ActionResultType.Fail,
       furthest: this._internal_move(index),
       expected,
     };
@@ -502,7 +452,7 @@ class Context {
         : a.expected;
     if (b.type === "ActionOK") {
       return {
-        type: "ActionOK",
+        type: ActionResultType.OK,
         location: b.location,
         value: b.value,
         furthest: a.furthest,
@@ -510,30 +460,9 @@ class Context {
       };
     }
     return {
-      type: "ActionFail",
+      type: ActionResultType.Fail,
       furthest: a.furthest,
       expected,
     };
   }
-}
-
-/**
- * Represents a successful parse result.
- */
-export interface ParseOK<A> {
-  type: "ParseOK";
-  /** The parsed value */
-  value: A;
-}
-
-/**
- * Represents a failed parse result, where it failed, and what types of
- * values were expected at the point of failure.
- */
-export interface ParseFail {
-  type: "ParseFail";
-  /** The input location where the parse failed */
-  location: SourceLocation;
-  /** List of expected values at the location the parse failed */
-  expected: string[];
 }
