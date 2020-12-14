@@ -1,7 +1,8 @@
-import { Context, failure, merge, success } from "./Context";
-import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult, ActionOK, ActionFail } from "./interfaces";
+import { ActionResult } from "./ActionResult";
+import { Context, failure, success } from "./Context";
+import type { ParseOK, ParseFail, ParseNode, SourceLocation, } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
-export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult }
+export { ParseOK, ParseFail, ParseNode, SourceLocation }
 
 /**
  * The parsing action. Takes a parsing Context and returns an ActionResult
@@ -28,7 +29,7 @@ export class Parser<A> {
     if (result.type === ActionResultType.OK) {
       return {
         type: ResultTypeEnum.OK,
-        value: result.value,
+        value: result.value!,
       };
     }
     return {
@@ -85,14 +86,14 @@ export class Parser<A> {
   chain<B>(fn: (value: A) => Parser<B>): Parser<B> {
     return new Parser((context) => {
       const a = this.action(context);
-      if (a.type === ActionResultType.Fail) {
-        return a;
+      if (a.type !== ActionResultType.OK) {
+        return a as unknown as ActionResult<B>;
       }
       context = context.moveTo(a.location);
 
-      const parserB = fn(a.value);
+      const parserB = fn(a.value!);
       const b = parserB.action(context)
-      return merge(a, b);
+      return a.update(b)
     });
   }
 
@@ -103,14 +104,7 @@ export class Parser<A> {
     const parent = this;
     return new Parser(function (context) {
       const report = parent.action(context)
-      if (report.type === ActionResultType.OK) {
-        return {
-          ...report,
-          value: fn(report.value)
-        }
-      } else {
-        return report
-      }
+      return report.transform<B>(fn)
     })
   }
 
@@ -131,13 +125,12 @@ export class Parser<A> {
       if (result.type === ActionResultType.OK) {
         return result;
       }
-      return {
+      return new ActionResult({
         type: ActionResultType.Fail,
-        value: undefined,
         furthest: result.furthest,
         location: context.location,
         expected: expected
-      };
+      })
     });
   }
 
@@ -193,23 +186,23 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
   const pairParser = sepParser.next(itemParser)
 
   return new Parser(function (context) {
-    var report: ActionResult<A> = failure(context, []) as ActionFail;
+    var report = failure<any>(context, [])
     var values: A[] = [];
 
     while (values.length < max) {
       if (values.length > 0) {
-        report = merge(report, pairParser.action(context))
+        report = report.update(pairParser.action(context))
       } else {
-        report = merge(report, itemParser.action(context))
+        report = report.update(itemParser.action(context))
       }
       if (report.type !== ActionResultType.OK) break;
       context = context.moveTo(report.location)
       values.push(report.value)
     }
     if (values.length < min) {
-      return merge(report, failure(context, []))
+      return report.update(failure(context, []))
     } else {
-      return merge(report, success(context, values))
+      return report.update(success(context, values))
     }
   })
 }
@@ -219,11 +212,12 @@ export function Separated<A, B>(itemParser: Parser<A>, sepParser: Parser<B>, min
 export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Parser<A[]> {
   return new Parser(function (context) {
 
-    var report: ActionResult<A> = failure(context, []) as ActionFail;
+    var report = failure<any>(context, [])
     var values: A[] = [];
 
     while (values.length < max) {
-      report = merge(report, itemParser.action(context))
+      const temp = itemParser.action(context)
+      report = report.update(temp)
       if (report.type !== ActionResultType.OK) break;
       validateInfiniteLoop(context, report);
       context = context.moveTo(report.location)
@@ -231,9 +225,9 @@ export function Repeat<A>(itemParser: Parser<A>, min: number, max: number): Pars
     }
 
     if (values.length < min) {
-      return merge(report, failure(context, []))
+      return report.update(failure(context, []))
     } else {
-      return merge(report, success(context, values))
+      return report.update(success(context, values))
     }
   })
 }
@@ -312,7 +306,7 @@ export function lookahead<B>(parser: Parser<B>) {
     if (a.type !== ActionResultType.OK) {
       return a
     }
-    return merge(a, success(context, a.value))
+    return a.update(success(context, a.value))
   })
 }
 
@@ -321,9 +315,9 @@ export function notFollowing<B>(parser: Parser<B>) {
     const a = parser.action(context)
     if (a.type === ActionResultType.OK) {
       const b = failure<null>(context, [`not '${a.value}'`])
-      return merge(a, b)
+      return a.update(b)
     }
-    return merge(a, success(context, null))
+    return a.update(success(context, null))
   })
 }
 
@@ -381,22 +375,24 @@ function toParser(parser: string | RegExp | Parser<any>) {
 export function all<A extends any[]>(...parsers: ManyParsers<A>): Parser<A> {
   parsers = parsers.map(toParser) as ManyParsers<A>;
   return new Parser((context) => {
-    const reports: ActionOK<A>[] = []
+    var report = failure<any>(context, [])
     const values = new Array(parsers.length) as A;
 
     for (let i = 0; i < parsers.length; i++) {
       const parser: ManyParsers<A>[typeof i] = parsers[i];
-      const report = parser.action(context);
+      const next = parser.action(context);
 
-      context = context.moveTo(report.location);
-      if (report.type === ActionResultType.Fail)
-        return mergeAll(...reports, report)
-      reports.push(report);
-      values[i] = report.value
+      context = context.moveTo(next.location);
+      report = report.update(next)
+
+      if (next.type === ActionResultType.OK) {
+        values[i] = next.value
+      } else {
+        return report
+      }
     }
 
-    const report = success(context, values)
-    return mergeAll(...reports, report);
+    return report.update(success(context, values))
   });
 }
 
@@ -406,16 +402,18 @@ export function choice<Parsers extends (Parser<any> | any)[]>(...parsers: Parser
   parsers = parsers.map(toParser) as Parsers;
 
   return new Parser((context) => {
-    var reports: ActionFail[] = []
+    var report = failure<any>(context, [])
+
     for (let i = 0; i < parsers.length; i++) {
       const parser = parsers[i];
-      const report = parser.action(context);
-      if (report.type === ActionResultType.OK)
-        return mergeAll(...reports, report)
-      reports.push(report);
+      const next = parser.action(context);
+      report = report.update(next)
+      if (next.type === ActionResultType.OK) {
+        break
+      }
     }
 
-    return mergeAll(...reports);
+    return report
   });
 }
 
@@ -428,8 +426,4 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
     this.action = fn().action;
     return this.action(context);
   });
-}
-
-function mergeAll(...rest: ActionResult<any>[]): ActionResult<any> {
-  return rest.reduce(merge)
 }
