@@ -18,8 +18,8 @@ export interface SourceLocation {
 }
 
 export enum ActionResultType {
-    Fail = "ActionFail",
-    OK = "ActionOK",
+    Fail,
+    OK,
 }
 
 
