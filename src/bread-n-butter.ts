@@ -372,8 +372,12 @@ class Context {
   /**
    * Returns a new context with the supplied location and the current input.
    */
-  moveTo(location: SourceLocation): Context {
-    return new Context(this.input, location);
+  moveTo(location: SourceLocation|number): Context {
+    if (typeof location === "number") {
+      return new Context(this.input, this._internal_move(location));
+    } else {
+      return new Context(this.input, location);
+    }
   }
 
   private _internal_move(newIndex: number): SourceLocation {
