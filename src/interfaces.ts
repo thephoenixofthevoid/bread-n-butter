@@ -22,6 +22,15 @@ export enum ActionResultType {
     OK = "ActionOK",
 }
 
+
+// Eventually drop strings to get ints
+export enum ResultTypeEnum {
+    Fail = "ParseFail",
+    OK = "ParseOK",
+    Node = "ParseNode",
+}
+
+
 /**
  * Represents the result of a parser's action callback.
  */
@@ -52,19 +61,11 @@ export interface ActionFail {
 }
 
 
-
-// Eventually drop strings to get ints
-export enum ParseResultType {
-    Fail = "ParseFail",
-    OK = "ParseOK",
-    Node = "ParseNode",
-}
-
 /**
  * Represents a successful parse result.
  */
 export interface ParseOK<A> {
-    type: ParseResultType.OK;
+    type: ResultTypeEnum.OK;
     /** The parsed value */
     value: A;
 }
@@ -74,7 +75,7 @@ export interface ParseOK<A> {
  * values were expected at the point of failure.
  */
 export interface ParseFail {
-    type: ParseResultType.Fail;
+    type: ResultTypeEnum.Fail;
     /** The input location where the parse failed */
     location: SourceLocation;
     /** List of expected values at the location the parse failed */
@@ -85,7 +86,7 @@ export interface ParseFail {
  * Result type from `node`. See `node` for more details.
  */
 export interface ParseNode<S extends string, A> {
-    type: ParseResultType.Node;
+    type: ResultTypeEnum.Node;
     name: S;
     value: A;
     start: SourceLocation;
