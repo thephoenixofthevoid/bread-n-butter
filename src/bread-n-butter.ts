@@ -359,11 +359,6 @@ export function lazy<A>(fn: () => Parser<A>): Parser<A> {
 }
 
 
-function union(a: string[], b: string[]): string[] {
-  return [...new Set([...a, ...b])];
-}
-
-
 /**
  * Represents the current parsing context.
  */
@@ -435,33 +430,26 @@ function mergeAll(...rest: ActionResult<any>[]): ActionResult<any> {
 }
 
 
-
 /**
 * Merge two sequential `ActionResult`s so that the `expected` and location data
 * is preserved correctly.
 */
 function merge<A, B>(a: ActionResult<A>, b: ActionResult<B>): ActionResult<B> {
-  if (b.furthest.index > a.furthest.index) {
-    return b;
-  }
-  const expected =
-    b.furthest.index === a.furthest.index
-      ? union(a.expected, b.expected)
-      : a.expected;
-  if (b.type === ActionResultType.OK) {
-    return {
-      type: ActionResultType.OK,
-      location: b.location,
-      value: b.value,
-      furthest: a.furthest,
-      expected,
-    };
-  } else {
-    return {
-      type: ActionResultType.Fail,
-      furthest: a.furthest,
-      expected,
-    };
+  if (a.furthest.index > b.furthest.index) return {
+    ...b,
+    expected: a.expected,
+    furthest: a.furthest
   }
 
+  if (a.furthest.index < b.furthest.index) return {
+    ...b,
+    expected: b.expected,
+    furthest: b.furthest
+  }
+
+  return {
+    ...b,
+    expected: [...new Set([...a.expected, ...b.expected])],
+    furthest: a.furthest
+  }
 }
