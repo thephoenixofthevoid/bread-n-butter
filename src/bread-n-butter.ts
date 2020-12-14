@@ -1,5 +1,6 @@
 import type { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } from "./interfaces";
 import { ResultTypeEnum, ActionResultType } from "./interfaces";
+export { ParseOK, ParseFail, ParseNode, SourceLocation, ActionResult } 
 
 /**
  * The parsing action. Takes a parsing Context and returns an ActionResult

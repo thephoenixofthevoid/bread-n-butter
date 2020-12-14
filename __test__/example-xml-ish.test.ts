@@ -14,6 +14,47 @@ test("xml basic", () => {
   });
 });
 
+test("xml complex", () => {
+  for (let i = 0; i < 1000; i++) {
+    XML.parse(`
+    <Map>
+      <Entry key="string-a"><String>alpha</String></Entry>
+      <Entry key="string-b"><String>bravo</String></Entry>
+      <Entry key="string-c"><String>charlie</String></Entry>
+      <Entry key="list">
+        <List>
+          <String>a</String>
+          <String>b</String>
+          <String>c</String>
+        </List>
+        <List>
+          <String>a</String>
+          <String>b</String>
+          <String>c</String>
+        </List>
+        <List>
+          <String>a</String>
+          <String>b</String>
+          <String>c</String>
+        </List>
+        <List>
+          <String>a</String>
+          <String>b</String>
+          <String>c</String>
+        </List>
+      </Entry>
+      <List>
+        <String>a</String>
+        <String>b</String>
+        <String>c</String>
+      </List>
+      <Entry key="null"><Null /></Entry>
+      <Entry key="empty" />
+    </Map>
+    `)
+  }
+})
+
 test("xml large example", () => {
   snapTest(
     XML,

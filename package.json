@@ -17,6 +17,7 @@
     "docs-serve": "eleventy --serve",
     "check": "prettier --check src examples __test__ && eslint --ext .js,.ts src examples __test__ -f unix",
     "test": "jest",
+    "analize": "node --trace-ic node_modules/.bin/jest --coverage=false --runInBand",
     "start": "jest --watch",
     "postversion": "git push --tags && git push"
   },
